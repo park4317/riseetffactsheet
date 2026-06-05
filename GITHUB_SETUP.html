@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>GitHub Pages 셋업 가이드</title>
+<style>
+body { font-family: 'Segoe UI', sans-serif; max-width: 700px; margin: 40px auto; padding: 0 24px; color: #1a1a1a; line-height: 1.7; }
+h1 { color: #002B6E; border-bottom: 3px solid #F5A800; padding-bottom: 10px; }
+h2 { color: #002B6E; margin-top: 36px; }
+h3 { color: #0047B3; margin-top: 24px; }
+.step { background: #F4F6FA; border-left: 4px solid #0047B3; padding: 16px 20px; margin: 16px 0; border-radius: 0 6px 6px 0; }
+.step strong { color: #002B6E; }
+code, pre { background: #1e1e1e; color: #d4d4d4; padding: 3px 8px; border-radius: 4px; font-family: Consolas, monospace; font-size: 13px; }
+pre { display: block; padding: 16px; line-height: 1.8; overflow-x: auto; }
+.gold { background: #FFF8E0; border-left: 4px solid #F5A800; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 16px 0; }
+.url { font-size: 18px; font-weight: 700; color: #0047B3; background: #E8F0FD; padding: 12px 20px; border-radius: 6px; display: inline-block; margin: 8px 0; }
+a { color: #0047B3; }
+</style>
+</head>
+<body>
+
+<h1>🚀 GitHub Pages 셋업 가이드</h1>
+<p>팩트시트를 인터넷에 올려서 누구나 접속할 수 있게 하는 방법입니다.<br>
+<strong>최초 1회 설정 (약 5분)</strong>이면 이후엔 deploy.bat 더블클릭 한 번으로 배포됩니다.</p>
+
+<div class="gold">
+💡 <strong>전제 조건:</strong> Git 설치 필요 — <a href="https://git-scm.com/download/win" target="_blank">https://git-scm.com/download/win</a> 에서 다운로드
+</div>
+
+<h2>Step 1. GitHub 레포 생성</h2>
+<div class="step">
+  <strong>1.</strong> <a href="https://github.com/new" target="_blank">https://github.com/new</a> 접속<br>
+  <strong>2.</strong> Repository name 입력: <code>rise-etf-factsheets</code><br>
+  <strong>3.</strong> <strong>Private</strong> 선택 (사내 자료 보호)<br>
+  <strong>4.</strong> "Create repository" 클릭
+</div>
+
+<h2>Step 2. 이 폴더를 GitHub에 연결</h2>
+<p>프로젝트 폴더(<code>RISE ETF 데이터 자동화</code>)에서 <strong>cmd 창</strong>을 열고 아래 명령어 순서대로 실행:</p>
+
+<pre>git init
+git remote add origin https://github.com/[내아이디]/rise-etf-factsheets.git
+git branch -M main</pre>
+
+<pre>mkdir docs
+echo. > docs\README.md
+git add .
+git commit -m "Initial setup"
+git push -u origin main</pre>
+
+<div class="gold">
+⚠️ <code>[내아이디]</code> 부분을 본인 GitHub 아이디로 바꿔주세요.<br>
+push 시 GitHub 로그인 팝업이 뜨면 로그인하면 됩니다.
+</div>
+
+<h2>Step 3. GitHub Pages 활성화</h2>
+<div class="step">
+  <strong>1.</strong> GitHub 레포 페이지 → <strong>Settings</strong> 탭 클릭<br>
+  <strong>2.</strong> 왼쪽 메뉴 → <strong>Pages</strong> 클릭<br>
+  <strong>3.</strong> Source 항목에서 <strong>"GitHub Actions"</strong> 선택<br>
+  <strong>4.</strong> 저장
+</div>
+
+<h2>✅ 설정 완료! 이후 사용법</h2>
+
+<h3>팩트시트 업데이트 & 배포</h3>
+<div class="step">
+  <code>deploy.bat</code> 더블클릭<br><br>
+  자동으로: 전체 ETF 팩트시트 생성 → 인덱스 페이지 빌드 → GitHub 푸시 → 1분 내 사이트 반영
+</div>
+
+<h3>접속 주소</h3>
+<div class="url">https://[내아이디].github.io/rise-etf-factsheets/</div>
+<p>이 URL을 직원들에게 공유하면 누구나 최신 팩트시트를 열람할 수 있습니다.</p>
+
+<h2>자주 묻는 질문</h2>
+<p><strong>Q. Private 레포인데 외부에서 접속 가능?</strong><br>
+GitHub Pages는 Private 레포여도 URL을 아는 사람은 접속 가능합니다. URL을 모르면 접속 불가.</p>
+
+<p><strong>Q. 자동으로 매일 업데이트되게 할 수 없나?</strong><br>
+riseetf.co.kr이 해외 서버를 막아서 GitHub Actions에서 자동 스크래핑은 불가합니다.<br>
+대신 deploy.bat을 작업자가 필요할 때 실행하면 됩니다.</p>
+
+<p><strong>Q. git push 시 오류가 나면?</strong><br>
+GitHub 계정에 Personal Access Token이 필요할 수 있습니다.<br>
+GitHub → Settings → Developer settings → Personal access tokens → Generate new token (repo 권한 체크)</p>
+
+</body>
+</html>

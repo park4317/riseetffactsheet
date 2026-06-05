@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RISE 네트워크인프라 ETF 팩트시트</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-dark:  #002B6E;
+      --blue-mid:   #0047B3;
+      --blue-light: #E8F0FD;
+      --gold:       #F5A800;
+      --gold-light: #FFF3CC;
+      --red:        #E03232;
+      --green:      #0A7C42;
+      --gray-1:     #F4F6FA;
+      --gray-2:     #E8ECF4;
+      --gray-3:     #C0C8DA;
+      --gray-text:  #6B7A99;
+      --text-main:  #111827;
+      --text-sub:   #374151;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #DDE3EE;
+      color: var(--text-main);
+      padding: 32px 20px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ===== A4 PAGE ===== */
+    .page {
+      width: 794px;
+      min-height: 1122px;
+      background: #fff;
+      margin: 0 auto 32px;
+      box-shadow: 0 4px 32px rgba(0,0,0,.18);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--blue-dark);
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-badge {
+      background: var(--gold);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 3px;
+      letter-spacing: .5px;
+    }
+    .brand-name {
+      color: rgba(255,255,255,.9);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: .3px;
+    }
+    .header-date {
+      color: rgba(255,255,255,.55);
+      font-size: 10px;
+    }
+    .header-gold-bar {
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold) 0%, #FFD66E 60%, transparent 100%);
+    }
+    .header-body {
+      padding: 18px 28px 22px;
+    }
+    .etf-category {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.25);
+      color: rgba(255,255,255,.9);
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+      letter-spacing: .3px;
+    }
+    .tag.accent {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #fff;
+      font-weight: 700;
+    }
+    .etf-name {
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -.3px;
+      margin-bottom: 6px;
+    }
+    .etf-ticker {
+      color: rgba(255,255,255,.5);
+      font-size: 11px;
+      margin-left: 8px;
+      font-weight: 400;
+    }
+    .etf-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,.75);
+      line-height: 1.6;
+      max-width: 560px;
+    }
+
+    /* ===== KPI CARDS ===== */
+    .kpi-section {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0;
+      border-bottom: 1px solid var(--gray-2);
+    }
+    .kpi-card {
+      padding: 14px 16px 13px;
+      border-right: 1px solid var(--gray-2);
+      background: #fff;
+    }
+    .kpi-card:last-child { border-right: none; }
+    .kpi-label {
+      font-size: 9.5px;
+      color: var(--gray-text);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 5px;
+    }
+    .kpi-value {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--blue-dark);
+      letter-spacing: -.5px;
+      line-height: 1;
+    }
+    .kpi-value.up   { color: var(--red); }
+    .kpi-value.down { color: #1B6CF2; }
+    .kpi-sub {
+      font-size: 9px;
+      color: var(--gray-text);
+      margin-top: 3px;
+    }
+
+    /* ===== BODY ===== */
+    .body {
+      flex: 1;
+      padding: 20px 28px;
+    }
+
+    /* ===== SECTION TITLE ===== */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--blue-dark);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      border-left: 3px solid var(--gold);
+      padding-left: 8px;
+      margin-bottom: 12px;
+    }
+
+    /* ===== CHART CONTAINER ===== */
+    .chart-wrap {
+      height: 200px;
+      position: relative;
+      margin-bottom: 6px;
+    }
+    .chart-badge {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: #FFF4D6;
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 4px;
+      border: 1px solid #FFE08A;
+    }
+    .chart-badge.pos { background:#FFF4D6; color:#D4780A; border-color:#FFD066; }
+
+    /* ===== TWO COLUMNS ===== */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* ===== HOLDINGS ===== */
+    .holding-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 7px;
+      gap: 8px;
+    }
+    .holding-rank {
+      width: 16px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--gray-text);
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .holding-name {
+      width: 90px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-main);
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .holding-bar-wrap {
+      flex: 1;
+      background: var(--gray-1);
+      border-radius: 3px;
+      height: 10px;
+      overflow: hidden;
+    }
+    .holding-bar {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--blue-mid), #4A9CF0);
+    }
+    .holding-bar.top { background: linear-gradient(90deg, var(--gold), #FFD066); }
+    .holding-pct {
+      width: 36px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--blue-dark);
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ===== DONUT ===== */
+    .donut-wrap {
+      height: 160px;
+      position: relative;
+    }
+
+    /* ===== PAGE 2 LAYOUT ===== */
+    .page2-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 20px;
+    }
+
+    /* ===== INDEX METHOD ===== */
+    .method-card {
+      background: var(--blue-light);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .method-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--blue-mid);
+      margin-bottom: 6px;
+      letter-spacing: .3px;
+    }
+    .method-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: 5px;
+    }
+    .method-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .method-text {
+      font-size: 10.5px;
+      color: var(--text-sub);
+      line-height: 1.55;
+    }
+    .keyword-chips {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .kchip {
+      background: var(--blue-dark);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+    .kchip.gold { background: var(--gold); }
+
+    /* ===== NEWS ===== */
+    .news-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--gray-2);
+    }
+    .news-item:last-child { border-bottom: none; }
+    .news-num {
+      width: 18px;
+      height: 18px;
+      background: var(--blue-dark);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .news-content { flex: 1; }
+    .news-headline {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.5;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .news-headline:hover { color: var(--blue-mid); text-decoration: underline; }
+    .news-meta {
+      font-size: 9.5px;
+      color: var(--gray-text);
+    }
+
+    /* ===== OUTLOOK ===== */
+    .outlook-box {
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .outlook-box.pos { background: #F0FBF5; border-left: 3px solid var(--green); }
+    .outlook-box.neg { background: #FFF5F5; border-left: 3px solid var(--red); }
+    .outlook-title {
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .outlook-title.pos { color: var(--green); }
+    .outlook-title.neg { color: var(--red); }
+    .outlook-icon { font-size: 12px; }
+    .outlook-list { list-style: none; }
+    .outlook-list li {
+      font-size: 10.5px;
+      color: var(--text-sub);
+      line-height: 1.55;
+      padding-left: 12px;
+      position: relative;
+      margin-bottom: 3px;
+    }
+    .outlook-list li::before {
+      content: '·';
+      position: absolute;
+      left: 4px;
+      font-weight: 900;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      background: var(--gray-1);
+      border-top: 1px solid var(--gray-2);
+      padding: 10px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-disclaimer {
+      font-size: 8.5px;
+      color: var(--gray-text);
+      line-height: 1.6;
+      max-width: 600px;
+    }
+    .footer-logo {
+      font-size: 10px;
+      font-weight: 900;
+      color: var(--blue-dark);
+      white-space: nowrap;
+      letter-spacing: .5px;
+    }
+
+    /* ===== DIVIDER ===== */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--gray-2);
+      margin: 16px 0;
+    }
+
+    /* ===== PRINT ===== */
+    @media print {
+      body { background: white; padding: 0; }
+      .page { box-shadow: none; border-radius: 0; margin: 0; page-break-after: always; }
+      .page:last-child { page-break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ PAGE 1 ══════════════════════ -->
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div class="brand">
+        <span class="brand-badge">RISE ETF</span>
+        <span class="brand-name">KB자산운용 | 국내주식 테마형</span>
+      </div>
+      <span class="header-date">기준일: 2026. 06. 05 &nbsp;|&nbsp; 판매사 배포용</span>
+    </div>
+    <div class="header-gold-bar"></div>
+    <div class="header-body">
+      <div class="etf-category">
+        <span class="tag accent">AI 인프라</span>
+        <span class="tag">5G 네트워크</span>
+        <span class="tag">반도체 부품</span>
+        <span class="tag">광통신</span>
+        <span class="tag">AI 서버</span>
+        <span class="tag">국내주식</span>
+      </div>
+      <div class="etf-name">
+        RISE 네트워크인프라
+        <span class="etf-ticker">367760 · KRX</span>
+      </div>
+      <div class="etf-desc">
+        5G·AI 시대 연결 인프라의 핵심 — 삼성전기·SK하이닉스·LG이노텍 등 AI 서버 핵심 부품 및 네트워크 밸류체인 기업에 집중 투자하는 테마형 ETF
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI BAR -->
+  <div class="kpi-section">
+    <div class="kpi-card">
+      <div class="kpi-label">상장일</div>
+      <div class="kpi-value" style="font-size:13px; padding-top:2px;">2020.10.29</div>
+      <div class="kpi-sub">상장 후 약 5.6년</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">순자산 (AUM)</div>
+      <div class="kpi-value">8,703<span style="font-size:11px; font-weight:500;">억원</span></div>
+      <div class="kpi-sub">2026.06.05 기준</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">총 보수</div>
+      <div class="kpi-value">0.45<span style="font-size:11px; font-weight:500;">%</span></div>
+      <div class="kpi-sub">연간 기준</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">일평균 거래량</div>
+      <div class="kpi-value" style="font-size:13px; padding-top:2px;">215<span style="font-size:11px; font-weight:500;">만주</span></div>
+      <div class="kpi-sub">최근 영업일 기준</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">구성 종목 수</div>
+      <div class="kpi-value">23<span style="font-size:11px; font-weight:500;">종목</span></div>
+      <div class="kpi-sub">반기 리밸런싱</div>
+    </div>
+    <div class="kpi-card" style="background: var(--gold-light);">
+      <div class="kpi-label" style="color:#B07800;">최근 1개월 수익률</div>
+      <div class="kpi-value up">+55.96<span style="font-size:11px;">%</span></div>
+      <div class="kpi-sub">NAV 기준 (분배금 재투자)</div>
+    </div>
+  </div>
+
+  <!-- BODY PAGE 1 -->
+  <div class="body">
+    <div class="section-title">최근 1개월 기준가격 (NAV) 추이</div>
+
+    <div class="chart-wrap">
+      <canvas id="navChart"></canvas>
+      <div class="chart-badge pos">1개월 +55.96% &nbsp;|&nbsp; 1년 +669.21%</div>
+    </div>
+
+    <div style="display:flex; gap:18px; justify-content:flex-end; font-size:9.5px; color:var(--gray-text); margin-bottom: 16px;">
+      <span>▪ <span style="color:var(--blue-mid); font-weight:700;">■</span> NAV (기준가격)</span>
+      <span>기간: 2026.05.06 ~ 2026.06.05 &nbsp;|&nbsp; 단위: 원</span>
+    </div>
+
+    <hr class="divider">
+
+    <div class="two-col">
+      <!-- LEFT: Holdings bar -->
+      <div>
+        <div class="section-title">TOP 10 구성종목 비중</div>
+
+        <div class="holding-row">
+          <span class="holding-rank">1</span>
+          <span class="holding-name">삼성전기</span>
+          <div class="holding-bar-wrap"><div class="holding-bar top" style="width:100%"></div></div>
+          <span class="holding-pct" style="color:var(--gold);">30.82%</span>
+        </div>
+        <div class="holding-row">
+          <span class="holding-rank">2</span>
+          <span class="holding-name">SK하이닉스</span>
+          <div class="holding-bar-wrap"><div class="holding-bar" style="width:73.1%"></div></div>
+          <span class="holding-pct">22.54%</span>
+        </div>
+        <div class="holding-row">
+          <span class="holding-rank">3</span>
+          <span class="holding-name">삼성전자</span>
+          <div class="holding-bar-wrap"><div class="holding-bar" style="width:64.6%"></div></div>
+          <span class="holding-pct">19.91%</span>
+        </div>
+        <div class="holding-row">
+          <span class="holding-rank">4</span>
+          <span class="holding-name">LG이노텍</span>
+          <div class="holding-bar-wrap"><div class="holding-bar" style="width:35.6%"></div></div>
+          <span class="holding-pct">10.98%</span>
+        </div>
+        <div class="holding-row">
+          <span class="holding-rank">5</span>
+          <span class="holding-name">이수페타시스</span>
+          <div class="holding-bar-wrap"><div class="holding-bar" style="width:13.7%"></div></div>
+          <span class="holding-pct">4.23%</span>
+        </div>
+        <div class="holding-row">
+          <span class="holding-rank">6</span>
+          <span class="holding-name">리노공업</span>
+          <div class="holding-bar-wrap"><div class="holding-bar" style="width:9.3%"></div></div>
+          <span class="holding-pct">2.88%</span>
+        </div>
+        <div class="holding-row">
+          <span class="holding-rank">7</span>
+          <span class="holding-name">원화예금</span>
+          <div class="holding-bar-wrap"><div class="holding-bar" style="width:6.9%"></div></div>
+          <span class="holding-pct">2.14%</span>
+        </div>
+        <div class="holding-row">
+          <span class="holding-rank">8</span>
+          <span class="holding-name">제주반도체</span>
+          <div class="holding-bar-wrap"><div class="holding-bar" style="width:5.9%"></div></div>
+          <span class="holding-pct">1.83%</span>
+        </div>
+        <div class="holding-row">
+          <span class="holding-rank">9</span>
+          <span class="holding-name">대한광통신</span>
+          <div class="holding-bar-wrap"><div class="holding-bar" style="width:4.3%"></div></div>
+          <span class="holding-pct">1.32%</span>
+        </div>
+        <div class="holding-row">
+          <span class="holding-rank">10</span>
+          <span class="holding-name">RFHIC</span>
+          <div class="holding-bar-wrap"><div class="holding-bar" style="width:2.8%"></div></div>
+          <span class="holding-pct">0.87%</span>
+        </div>
+        <div style="font-size:9px; color:var(--gray-text); margin-top:6px;">2026.06.05 기준 · TOP10 합계 97.5%</div>
+      </div>
+
+      <!-- RIGHT: Donut -->
+      <div>
+        <div class="section-title">그룹별 비중</div>
+        <div class="donut-wrap">
+          <canvas id="donutChart"></canvas>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap: 4px 10px; margin-top:8px;">
+          <div style="display:flex; align-items:center; gap:5px; font-size:9.5px;">
+            <span style="width:9px;height:9px;background:#0047B3;border-radius:2px;display:inline-block;flex-shrink:0;"></span>삼성그룹 계열 <b style="margin-left:auto;">50.73%</b>
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; font-size:9.5px;">
+            <span style="width:9px;height:9px;background:#F5A800;border-radius:2px;display:inline-block;flex-shrink:0;"></span>SK그룹 계열 <b style="margin-left:auto;">22.54%</b>
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; font-size:9.5px;">
+            <span style="width:9px;height:9px;background:#E03232;border-radius:2px;display:inline-block;flex-shrink:0;"></span>LG그룹 계열 <b style="margin-left:auto;">10.98%</b>
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; font-size:9.5px;">
+            <span style="width:9px;height:9px;background:#4A9CF0;border-radius:2px;display:inline-block;flex-shrink:0;"></span>네트워크 전문 <b style="margin-left:auto;">9.56%</b>
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; font-size:9.5px;">
+            <span style="width:9px;height:9px;background:#C0C8DA;border-radius:2px;display:inline-block;flex-shrink:0;"></span>기타/현금 <b style="margin-left:auto;">6.19%</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-disclaimer">
+      ※ 이 자료는 KB자산운용(주)이 투자판단의 참고용으로 제공하는 것으로, 투자권유 목적이 아닙니다. 과거 성과가 미래 수익을 보장하지 않습니다.
+    </div>
+    <div class="footer-logo">RISE ETF · KB자산운용</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════ PAGE 2 ══════════════════════ -->
+<div class="page">
+
+  <!-- HEADER (슬림) -->
+  <div class="header" style="padding:0;">
+    <div class="header-top">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="brand-badge">RISE ETF</span>
+        <span style="color:#fff; font-size:14px; font-weight:700; letter-spacing:-.2px;">RISE 네트워크인프라</span>
+        <span style="color:rgba(255,255,255,.45); font-size:11px;">367760</span>
+      </div>
+      <span class="header-date">2026. 06. 05 기준</span>
+    </div>
+    <div class="header-gold-bar"></div>
+  </div>
+
+  <!-- BODY PAGE 2 -->
+  <div class="body" style="flex:1;">
+    <div class="page2-grid">
+
+      <!-- LEFT COLUMN -->
+      <div>
+        <!-- 지수 방법론 -->
+        <div class="section-title">지수 방법론</div>
+        <div class="method-card">
+          <div class="method-title">FnGuide 네트워크인프라 지수</div>
+          <div class="method-row">
+            <div class="method-dot"></div>
+            <div class="method-text"><b>텍스트 마이닝 기반 종목 선별</b> — 코스피·코스닥 상장 종목에 텍스트 마이닝 적용, 5G·AI 네트워크 관련성 높은 종목 추출</div>
+          </div>
+          <div class="method-row">
+            <div class="method-dot"></div>
+            <div class="method-text"><b>유동성·사이즈 필터</b> — 60일 평균거래대금 2억원 이상, 시가총액 500억원 이상 조건 동시 충족 종목 대상</div>
+          </div>
+          <div class="method-row">
+            <div class="method-dot"></div>
+            <div class="method-text"><b>유동시총 가중 + 종목별 20% 상한</b> — 특정 종목 쏠림 방지, 통신사업자(KT·SKT 등) 제외로 전통 통신업종과 차별화</div>
+          </div>
+          <div class="method-row">
+            <div class="method-dot"></div>
+            <div class="method-text"><b>AI 시대 자연스러운 진화</b> — 5G 출범 당시 통신장비·기지국 중심에서 AI 서버 핵심 부품·광통신 공급망으로 포트폴리오 이동</div>
+          </div>
+          <div class="keyword-chips">
+            <span class="kchip gold">AI 서버</span>
+            <span class="kchip">MLCC</span>
+            <span class="kchip">HBM</span>
+            <span class="kchip">광트랜시버</span>
+            <span class="kchip">5G 기지국</span>
+          </div>
+        </div>
+
+        <!-- 주요 뉴스 -->
+        <div class="section-title">주요 뉴스 헤드라인</div>
+
+        <div class="news-item">
+          <div class="news-num">1</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://www.g-enews.com/article/Securities/2026/06/20260602093955785153ddfb15a_1" target="_blank">
+              삼성전기+삼전·닉스 담은 'RISE 네트워크인프라', 1년 수익률 758% — AI 반도체 공급망 집중투자 효과
+            </a>
+            <span class="news-meta">글로벌이코노믹 · 2026.06</span>
+          </div>
+        </div>
+
+        <div class="news-item">
+          <div class="news-num">2</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://v.daum.net/v/20260602090208812" target="_blank">
+              "AI 반도체 공급망 집중투자"…'RISE 네트워크인프라' 1년 수익률 758% — 국내 주식형 ETF 수익률 최상위권
+            </a>
+            <span class="news-meta">다음뉴스 · 2026.06</span>
+          </div>
+        </div>
+
+        <div class="news-item">
+          <div class="news-num">3</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://marketin.edaily.co.kr/News/ReadE?newsId=02958566645477784" target="_blank">
+              KB운용 'RISE 네트워크인프라', 국내 주식형 ETF 수익률 1위 — 삼성전기 AI서버 MLCC 수혜 직격
+            </a>
+            <span class="news-meta">이데일리 · 2026.05</span>
+          </div>
+        </div>
+
+        <div class="news-item">
+          <div class="news-num">4</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://biz.heraldcorp.com/article/10678049" target="_blank">
+              "AI시대 연결 인프라 수혜"…KB자산운용 'RISE 네트워크인프라 ETF', 6개월 수익률 125%
+            </a>
+            <span class="news-meta">헤럴드경제 · 2026.02</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div>
+        <!-- 수익률 테이블 -->
+        <div class="section-title">일별 NAV 추이 (최근)</div>
+        <table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:16px;">
+          <thead>
+            <tr style="background:var(--blue-dark); color:#fff;">
+              <th style="padding:6px 8px; text-align:left; font-weight:600; border-radius:0;">날짜</th>
+              <th style="padding:6px 8px; text-align:right; font-weight:600;">NAV (원)</th>
+              <th style="padding:6px 8px; text-align:right; font-weight:600;">등락률</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:#fff;">
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2);">06.05 (현재)</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; font-weight:700;">80,965</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; color:var(--blue-mid);">▼ 3.03%</td>
+            </tr>
+            <tr style="background:var(--gray-1);">
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2);">06.02</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; font-weight:700;">83,493</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; color:var(--blue-mid);">▼ 5.36%</td>
+            </tr>
+            <tr style="background:#fff;">
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2);">06.01</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; font-weight:700;">88,219</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; color:var(--red);">▲ 0.62%</td>
+            </tr>
+            <tr style="background:var(--gray-1);">
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2);">05.29</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; font-weight:700;">87,679</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; color:var(--red);">▲ 9.27%</td>
+            </tr>
+            <tr style="background:#fff;">
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2);">05.28</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; font-weight:700;">80,243</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; color:var(--red);">▲ 4.76%</td>
+            </tr>
+            <tr style="background:var(--gray-1);">
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2);">05.27</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; font-weight:700;">76,599</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; color:var(--red);">▲ 2.60%</td>
+            </tr>
+            <tr style="background:#fff;">
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2);">05.26</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; font-weight:700;">74,660</td>
+              <td style="padding:5px 8px; border-bottom:1px solid var(--gray-2); text-align:right; color:var(--red);">▲ 10.40%</td>
+            </tr>
+            <tr style="background:var(--gray-1); font-weight:700; color:var(--blue-dark);">
+              <td style="padding:5px 8px;">05.06 (1개월 전)</td>
+              <td style="padding:5px 8px; text-align:right;">51,916</td>
+              <td style="padding:5px 8px; text-align:right; color:var(--gray-text);">기준</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 수익률 요약 -->
+        <div style="background:var(--blue-light); border-radius:6px; padding:10px 12px; margin-bottom:16px;">
+          <div style="font-size:9px; color:var(--blue-mid); font-weight:700; letter-spacing:.3px; margin-bottom:7px;">기간별 수익률 (NAV 기준, 분배금 재투자)</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+            <div style="text-align:center;">
+              <div style="font-size:8.5px; color:var(--gray-text);">1개월</div>
+              <div style="font-size:14px; font-weight:800; color:var(--red);">+55.96%</div>
+            </div>
+            <div style="text-align:center; border-left:1px solid var(--gray-2); border-right:1px solid var(--gray-2);">
+              <div style="font-size:8.5px; color:var(--gray-text);">3개월</div>
+              <div style="font-size:14px; font-weight:800; color:var(--red);">+179.86%</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:8.5px; color:var(--gray-text);">1년</div>
+              <div style="font-size:14px; font-weight:800; color:var(--red);">+669.21%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 전망 & 유의사항 -->
+        <div class="section-title">전망 및 유의사항</div>
+
+        <div class="outlook-box pos">
+          <div class="outlook-title pos">
+            <span class="outlook-icon">▲</span> 긍정적 전망
+          </div>
+          <ul class="outlook-list">
+            <li>빅테크 CapEx 사이클 지속 — AI 서버 증설 수요로 MLCC·카메라모듈·HBM 동반 수혜</li>
+            <li>삼성전기, AI서버용 MLCC 수요 폭증 — 2026년 연간 영업이익 최대 전망</li>
+            <li>SK하이닉스 HBM3E/HBM4 본격 양산 → AI 반도체 공급망 핵심 지위 강화</li>
+            <li>이수페타시스·대한광통신, AI 데이터센터 광통신 인프라 투자 확대 수혜</li>
+          </ul>
+        </div>
+
+        <div class="outlook-box neg">
+          <div class="outlook-title neg">
+            <span class="outlook-icon">▲</span> 투자 유의사항
+          </div>
+          <ul class="outlook-list">
+            <li>상위 3개 종목(삼성전기+SK하이닉스+삼성전자) 합산 73.3% — 반도체 업황 집중 리스크</li>
+            <li>ETF 명칭은 '네트워크인프라'이나 실질 포트폴리오는 AI 반도체 부품 중심으로 전환</li>
+            <li>단기 변동성 매우 높음 — 1개월 내 ±15~30% 등락 구간 다수 발생</li>
+            <li>반도체 다운사이클 진입 시 포트폴리오 전반 동반 조정 가능성</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-disclaimer">
+      ※ 이 상품은 예금자보호법에 따라 보호되지 않습니다. 투자원금 손실이 발생할 수 있습니다 (0~100%). 투자 전 (간이)투자설명서를 반드시 읽어보시기 바랍니다.&nbsp; | &nbsp;
+      기초지수: FnGuide 네트워크인프라 지수 &nbsp;|&nbsp; AP·LP: 신한·한투·미래에셋·유진·메리츠·NH·KB·한화·현대차·유안타·키움·아이비케이·다올투자증권
+    </div>
+    <div class="footer-logo">RISE ETF · KB자산운용</div>
+  </div>
+
+</div>
+
+
+<script>
+// ── NAV 라인 차트 ──
+(function() {
+  const labels = ['05/06','05/07','05/08','05/11','05/12','05/13','05/14','05/15','05/18','05/19','05/20','05/21','05/22','05/26','05/27','05/28','05/29','06/01','06/02','06/04'];
+  const navData = [54689, 55517, 55366, 58213, 58187, 61024, 61763, 58430, 59749, 57819, 58870, 65104, 67630, 74660, 76599, 80243, 87679, 88219, 83493, 80965];
+
+  const ctx = document.getElementById('navChart').getContext('2d');
+
+  // Gradient fill
+  const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+  gradient.addColorStop(0, 'rgba(0, 71, 179, 0.20)');
+  gradient.addColorStop(1, 'rgba(0, 71, 179, 0.00)');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: navData,
+        borderColor: '#0047B3',
+        borderWidth: 2.5,
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.35,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#0047B3',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1.5,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#002B6E',
+          titleColor: '#fff',
+          bodyColor: '#FFD066',
+          padding: 10,
+          callbacks: {
+            label: ctx => `NAV  ${ctx.parsed.y.toLocaleString()}원`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#F0F2F7' },
+          ticks: { font: { size: 9, family: 'Noto Sans KR' }, color: '#8896B3' }
+        },
+        y: {
+          grid: { color: '#F0F2F7' },
+          ticks: {
+            font: { size: 9, family: 'Noto Sans KR' },
+            color: '#8896B3',
+            callback: v => v.toLocaleString()
+          },
+          min: 48000,
+        }
+      }
+    }
+  });
+})();
+
+// ── 도넛 차트 ──
+(function() {
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['삼성그룹 계열', 'SK그룹 계열', 'LG그룹 계열', '네트워크 전문', '기타/현금'],
+      datasets: [{
+        data: [50.73, 22.54, 10.98, 9.56, 6.19],
+        backgroundColor: ['#0047B3', '#F5A800', '#E03232', '#4A9CF0', '#C0C8DA'],
+        borderWidth: 2,
+        borderColor: '#fff',
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#002B6E',
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.parsed}%`
+          }
+        }
+      }
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
