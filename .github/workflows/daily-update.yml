@@ -1,0 +1,50 @@
+name: Daily ETF Factsheet Update
+
+on:
+  schedule:
+    # 평일 18:30 KST (= UTC 09:30)
+    - cron: '30 9 * * 1-5'
+  workflow_dispatch:   # 수동 실행 버튼
+
+permissions:
+  contents: write      # docs/ 커밋·푸시 권한
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install packages
+        run: |
+          pip install requests beautifulsoup4 lxml jinja2 yfinance --quiet
+
+      - name: Generate factsheets
+        run: |
+          cd pipeline
+          python main.py
+          cd ..
+
+      - name: Copy output to docs/
+        run: |
+          mkdir -p docs/output
+          cp output/*.html docs/output/ 2>/dev/null || echo "No HTML files generated"
+
+      - name: Build index page
+        run: python build_index.py
+
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git diff --cached --quiet || git commit -m "Auto-update $(date +'%Y-%m-%d %H:%M KST')"
+          git push

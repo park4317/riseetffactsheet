@@ -23,7 +23,7 @@ if errorlevel 1 (
 
 :: Install packages
 echo [1/5] Checking packages...
-pip install requests beautifulsoup4 pandas openpyxl jinja2 lxml --quiet
+pip install requests beautifulsoup4 pandas openpyxl jinja2 lxml yfinance --quiet
 
 :: Generate all factsheets
 echo [2/5] Generating factsheets...
