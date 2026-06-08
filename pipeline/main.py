@@ -30,12 +30,12 @@ def generate_factsheet(etf_name: str, test_mode: bool = False) -> dict | None:
 
     # ── 1. RISE 사이트 데이터 수집
     collector = RISECollector(cfg["site_id"])
-    data = collector.collect_all()
+    data = collector.collect_all(etf_config={**cfg, "name": etf_name})
 
     # ── 2. 뉴스 수집 (ETF + 구성종목 + 매크로)
     from news import NewsCollector
     nc = NewsCollector()
-    news_bundle = nc.collect_for_etf(cfg, holdings=data.get("holdings", []))
+    news_bundle = nc.collect_for_etf({**cfg, "name": etf_name}, holdings=data.get("holdings", []))
     data["news_bundle"] = news_bundle
     total_news = sum(len(v) for v in news_bundle.values())
     print(f"  뉴스: ETF {len(news_bundle['etf'])}건 / 종목 {len(news_bundle['stocks'])}건 / 매크로 {len(news_bundle['macro'])}건")
@@ -75,7 +75,7 @@ def main():
             generate_factsheet(name, test_mode=test_mode)
 
     elapsed = (datetime.now() - start).total_seconds()
-    print(f"\n[완료] {elapsed:.1f}초")
+    print(f"[완료] {elapsed:.1f}초")
 
 
 if __name__ == "__main__":
