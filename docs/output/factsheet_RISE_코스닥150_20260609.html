@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>RISE 코스닥150 ETF 팩트시트</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue-dark:  #002B6E; --blue-mid: #0047B3; --blue-light: #E8F0FD;
+      --gold: #F5A800; --gold-light: #FFF8E0;
+      --red: #E03232; --green: #0A7C42;
+      --gray-1: #F4F6FA; --gray-2: #E8ECF4; --gray-3: #C0C8DA;
+      --gray-text: #6B7A99; --text-main: #111827; --text-sub: #374151;
+    }
+    body { font-family:'Noto Sans KR',sans-serif; background:#DDE3EE; color:var(--text-main); padding:28px 20px; font-size:13px; line-height:1.5; }
+
+    /* PAGE */
+    .page { width:794px; min-height:1122px; background:#fff; margin:0 auto 28px; box-shadow:0 4px 32px rgba(0,0,0,.18); border-radius:4px; overflow:hidden; display:flex; flex-direction:column; }
+
+    /* HEADER */
+    .header { background:var(--blue-dark); }
+    .header-top { display:flex; align-items:center; justify-content:space-between; padding:13px 26px 11px; }
+    .brand { display:flex; align-items:center; gap:9px; }
+    .brand-badge { background:var(--gold); color:#fff; font-size:10px; font-weight:900; padding:2px 7px; border-radius:3px; letter-spacing:.5px; }
+    .brand-name { color:rgba(255,255,255,.8); font-size:11px; }
+    .header-date { color:rgba(255,255,255,.5); font-size:10px; }
+    .gold-bar { height:3px; background:linear-gradient(90deg,var(--gold) 0%,#FFD66E 60%,transparent 100%); }
+    .header-body { padding:14px 26px 18px; }
+    .etf-tags { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:7px; }
+    .tag { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:rgba(255,255,255,.9); font-size:10px; font-weight:500; padding:2px 8px; border-radius:20px; }
+    .tag.accent { background:var(--gold); border-color:var(--gold); color:#fff; font-weight:700; }
+    .etf-name { font-size:21px; font-weight:900; color:#fff; letter-spacing:-.3px; margin-bottom:5px; }
+    .etf-ticker { color:rgba(255,255,255,.45); font-size:11px; font-weight:400; margin-left:7px; }
+    .etf-desc { font-size:11.5px; color:rgba(255,255,255,.72); line-height:1.55; }
+
+    /* SLIM HEADER (page2) */
+    .header-slim { background:var(--blue-dark); }
+    .header-slim .header-top { padding:11px 26px; }
+
+    /* KPI */
+    .kpi-row { display:grid; grid-template-columns:repeat(6,1fr); border-bottom:1px solid var(--gray-2); }
+    .kpi-card { padding:11px 14px 10px; border-right:1px solid var(--gray-2); }
+    .kpi-card:last-child { border-right:none; }
+    .kpi-label { font-size:9px; color:var(--gray-text); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+    .kpi-val { font-size:15px; font-weight:800; color:var(--blue-dark); letter-spacing:-.5px; line-height:1; }
+    .kpi-val.up { color:var(--red); }
+    .kpi-val.down { color:#1B6CF2; }
+    .kpi-sub { font-size:8.5px; color:var(--gray-text); margin-top:3px; }
+    .kpi-gold { background:var(--gold-light); }
+
+    /* BODY */
+    .body { flex:1; padding:17px 26px; }
+
+    /* SECTION TITLE */
+    .section-title { font-size:10.5px; font-weight:700; color:var(--blue-dark); letter-spacing:.5px; text-transform:uppercase; border-left:3px solid var(--gold); padding-left:7px; margin-bottom:10px; }
+
+    /* CHART TABS */
+    .chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .chart-tabs { display:flex; gap:3px; }
+    .ctab { padding:3px 9px; border:1px solid var(--gray-2); border-radius:3px; font-size:9.5px; font-weight:600; cursor:pointer; background:#fff; color:var(--gray-text); font-family:inherit; }
+    .ctab:hover { background:var(--gray-1); }
+    .ctab.active { background:var(--blue-dark); color:#fff; border-color:var(--blue-dark); }
+    .chart-wrap { position:relative; }
+    .chart-legend { display:flex; gap:14px; font-size:9px; color:var(--gray-text); margin-top:4px; margin-bottom:10px; align-items:center; }
+    .legend-line { display:inline-block; width:18px; height:2px; vertical-align:middle; margin-right:3px; border-radius:1px; }
+    .legend-dash { border-top:2px dashed; display:inline-block; width:18px; vertical-align:middle; margin-right:3px; }
+
+    /* PERIOD RETURN TABLE */
+    .perf-table { width:100%; border-collapse:collapse; margin-bottom:12px; }
+    .perf-table th { background:var(--blue-dark); color:#fff; font-size:9.5px; font-weight:600; padding:6px 4px; text-align:center; }
+    .perf-table td { text-align:center; padding:7px 4px; font-size:11px; font-weight:700; border-bottom:1px solid var(--gray-2); }
+    .perf-table td.pos { color:var(--red); }
+    .perf-table td.neg { color:#1B6CF2; }
+    .perf-table td.na  { color:var(--gray-3); font-weight:400; }
+    .perf-sub { font-size:8.5px; color:var(--gray-text); text-align:right; margin-bottom:8px; }
+
+    /* TWO COLUMNS */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .page2-grid { display:grid; grid-template-columns:1.1fr 1fr; gap:18px; }
+
+    /* HOLDINGS */
+    .holding-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+    .holding-rank { width:14px; font-size:9px; font-weight:700; color:var(--gray-text); text-align:right; flex-shrink:0; }
+    .holding-name { width:78px; font-size:11px; font-weight:600; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mkt-tag { font-size:7px; padding:1px 4px; border-radius:2px; font-weight:700; flex-shrink:0; }
+    .mkt-tag.kospi  { background:#E8F0FD; color:#0047B3; }
+    .mkt-tag.kosdaq { background:#FFF8E0; color:#9A6500; }
+    .mkt-tag.unknown { background:var(--gray-1); color:var(--gray-text); }
+    .holding-bar-wrap { flex:1; background:var(--gray-1); border-radius:3px; height:9px; overflow:hidden; }
+    .holding-bar { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--blue-mid),#4A9CF0); }
+    .holding-bar.top { background:linear-gradient(90deg,var(--gold),#FFD066); }
+    .holding-pct { width:36px; font-size:10.5px; font-weight:700; color:var(--blue-dark); text-align:right; flex-shrink:0; }
+    .holding-note { font-size:8.5px; color:var(--gray-text); margin-top:3px; }
+
+    /* SECTOR LEGEND */
+    .sector-legend { display:grid; grid-template-columns:1fr 1fr; gap:3px 8px; margin-top:6px; }
+    .sector-item { display:flex; align-items:center; gap:5px; font-size:9px; color:var(--text-sub); }
+    .sector-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+
+    /* METHOD */
+    .method-card { background:var(--blue-light); border-radius:6px; padding:11px 13px; margin-bottom:10px; }
+    .method-title { font-size:9.5px; font-weight:700; color:var(--blue-mid); margin-bottom:6px; }
+    .method-row { display:flex; gap:7px; margin-bottom:4px; }
+    .method-dot { width:5px; height:5px; border-radius:50%; background:var(--gold); flex-shrink:0; margin-top:5px; }
+    .method-text { font-size:10px; color:var(--text-sub); line-height:1.5; }
+    .kchips { display:flex; gap:4px; flex-wrap:wrap; margin-top:7px; }
+    .kchip { background:var(--blue-dark); color:#fff; font-size:9px; font-weight:600; padding:2px 7px; border-radius:3px; }
+    .kchip.gold { background:var(--gold); }
+
+    /* DISTRIBUTION */
+    .dist-row { display:flex; gap:8px; align-items:center; background:var(--gray-1); padding:7px 11px; border-radius:5px; margin-bottom:10px; }
+    .dist-label { font-size:9px; font-weight:700; color:var(--blue-dark); white-space:nowrap; }
+    .dist-value { font-size:9.5px; color:var(--text-sub); }
+
+    /* NEWS */
+    .news-item { display:flex; gap:8px; padding:8px 0; border-bottom:1px solid var(--gray-2); }
+    .news-item:last-child { border-bottom:none; }
+    .news-num { width:16px; height:16px; background:var(--blue-dark); color:#fff; font-size:8.5px; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+    .news-content { flex:1; }
+    .news-headline { font-size:10.5px; font-weight:600; color:var(--text-main); text-decoration:none; display:block; margin-bottom:2px; line-height:1.45; }
+    .news-headline:hover { color:var(--blue-mid); text-decoration:underline; }
+    .news-meta { font-size:9px; color:var(--gray-text); }
+    .news-stock { color:var(--blue-mid); font-weight:600; }
+
+    /* OUTLOOK */
+    .outlook-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+    .outlook-box { border-radius:5px; padding:9px 11px; }
+    .outlook-box.pos { background:#F0FBF5; border-left:3px solid var(--green); }
+    .outlook-box.neg { background:#FFF5F5; border-left:3px solid var(--red); }
+    .outlook-title { font-size:9.5px; font-weight:700; margin-bottom:5px; }
+    .outlook-title.pos { color:var(--green); }
+    .outlook-title.neg { color:var(--red); }
+    .outlook-list { list-style:none; }
+    .outlook-list li { font-size:9.5px; color:var(--text-sub); padding-left:10px; position:relative; margin-bottom:3px; line-height:1.5; }
+    .outlook-list li::before { content:'·'; position:absolute; left:3px; font-weight:900; }
+
+    /* DIVIDER */
+    hr.div { border:none; border-top:1px solid var(--gray-2); margin:12px 0; }
+
+    /* FOOTER */
+    .footer { background:var(--gray-1); border-top:1px solid var(--gray-2); padding:8px 26px; display:flex; justify-content:space-between; align-items:center; }
+    .footer-disc { font-size:8px; color:var(--gray-text); line-height:1.55; max-width:580px; }
+    .footer-logo { font-size:10px; font-weight:900; color:var(--blue-dark); white-space:nowrap; }
+
+    @media print {
+      body { background:#fff; padding:0; }
+      .page { box-shadow:none; border-radius:0; margin:0; page-break-after:always; }
+      .page:last-child { page-break-after:auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ PAGE 1 ═══════════════════ -->
+<div class="page">
+  <div class="header">
+    <div class="header-top">
+      <div class="brand">
+        <span class="brand-badge">RISE ETF</span>
+        <span class="brand-name">KB자산운용 | 국내주식 테마형</span>
+      </div>
+      <span class="header-date">기준일: 2026. 06. 09 &nbsp;|&nbsp; 판매사 배포용</span>
+    </div>
+    <div class="gold-bar"></div>
+    <div class="header-body">
+      <div class="etf-tags">
+        
+        <span class="tag accent">코스닥150</span>
+        
+        <span class="tag ">코스닥</span>
+        
+        <span class="tag ">중소형성장주</span>
+        
+      </div>
+      <div class="etf-name">RISE 코스닥150<span class="etf-ticker">232080 · KRX</span></div>
+      <div class="etf-desc">코스닥150 지수를 추종하는 코스닥 대표 ETF</div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">상장일</div>
+      <div class="kpi-val" style="font-size:13px;">2026.03.10</div>
+      <div class="kpi-sub">국내주식 테마형</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">순자산 (AUM)</div>
+      <div class="kpi-val" style="font-size:13px;">3,659</div>
+      <div class="kpi-sub">억원 기준</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">총 보수</div>
+      <div class="kpi-val">—<span style="font-size:11px;font-weight:500;">%</span></div>
+      <div class="kpi-sub">연간 기준</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">20일 평균 거래량</div>
+      <div class="kpi-val" style="font-size:13px;">83<span style="font-size:11px;font-weight:500;">만주</span></div>
+      <div class="kpi-sub">최근 20 영업일</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">구성 종목 수</div>
+      <div class="kpi-val">10<span style="font-size:11px;font-weight:500;">종목</span></div>
+      <div class="kpi-sub">6개월 리밸런싱</div>
+    </div>
+    <div class="kpi-card kpi-gold">
+      <div class="kpi-label" style="color:#9A6500;">1개월 수익률</div>
+      
+        
+      <div class="kpi-val down">-21.76<span style="font-size:11px;">%</span></div>
+        
+      
+      <div class="kpi-sub">NAV 기준 · 분배금 재투자</div>
+    </div>
+  </div>
+
+  <!-- BODY P1 -->
+  <div class="body">
+    <!-- Chart header + tabs -->
+    <div class="chart-header">
+      <div class="section-title" style="margin-bottom:0;">기준가격(NAV) 추이 <span style="color:var(--gray-text);font-weight:400;">vs KOSDAQ</span></div>
+      <div class="chart-tabs">
+        <button class="ctab" onclick="setP('1m',this)">1개월</button>
+        <button class="ctab" onclick="setP('3m',this)">3개월</button>
+        <button class="ctab" onclick="setP('6m',this)">6개월</button>
+        <button class="ctab" onclick="setP('1y',this)">1년</button>
+        <button class="ctab active" onclick="setP('all',this)">전체</button>
+      </div>
+    </div>
+
+    <div class="chart-wrap" style="height:195px;">
+      <canvas id="navChart"></canvas>
+    </div>
+    <div class="chart-legend">
+      <span><span class="legend-line" style="background:#0047B3;"></span>NAV</span>
+      <span><span class="legend-dash" style="color:#B0B8CC;"></span>KOSDAQ</span>
+      <span style="margin-left:auto;" id="chartBaseNote">※ 공통 기준일 상대수익률(%) · 전일 종가</span>
+    </div>
+
+    <!-- Period Return Table (ETF + KOSPI 2행) -->
+    <table class="perf-table" style="margin-bottom:8px;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding-left:8px;">구분</th>
+          <th>1개월</th><th>3개월</th><th>6개월</th><th>1년</th><th>3년</th><th>연초이후</th><th>상장이후</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td style="text-align:left;padding-left:8px;font-weight:700;color:var(--blue-dark);">ETF</td>
+          
+            
+          <td class="neg">-21.76%</td>
+          
+        
+          
+            
+          <td class="neg">-23.09%</td>
+          
+        
+          
+            
+          <td class="neg">-0.86%</td>
+          
+        
+          
+            
+          <td class="pos">+29.41%</td>
+          
+        
+          
+            
+          <td class="pos">+17.72%</td>
+          
+        
+          
+            
+          <td class="pos">+2.37%</td>
+          
+        
+          
+            
+          <td class="pos">+60.71%</td>
+          
+        
+          
+        </tr>
+        <tr style="background:var(--gray-1);">
+          <td style="text-align:left;padding-left:8px;font-weight:700;color:var(--gray-text);">KOSDAQ</td>
+          
+            
+          <td class="neg">-20.03%</td>
+          
+        
+          
+            
+          <td class="na">—</td>
+          
+        
+          
+            
+          <td class="na">—</td>
+          
+        
+          
+            
+          <td class="na">—</td>
+          
+        
+          
+            
+          <td class="na">—</td>
+          
+        
+          
+            
+          <td class="na">—</td>
+          
+        
+          
+            
+          <td class="neg">-14.93%</td>
+          
+        
+          
+        </tr>
+      </tbody>
+    </table>
+    <div class="perf-sub" style="margin-bottom:10px;">2026. 06. 09 기준 · 분배금 재투자 가정 세전 수익률</div>
+
+    <!-- Holdings + Donut (hr 제거해 간격 줄임) -->
+    <div class="two-col">
+      <!-- LEFT: Holdings -->
+      <div>
+        <div class="section-title">TOP 10 구성종목</div>
+        
+        
+        <div class="holding-row">
+          <span class="holding-rank">1</span>
+          <span class="holding-name">알테오젠</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar top"
+                 style="width:100.0%;"></div>
+          </div>
+          <span class="holding-pct">6.73%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">2</span>
+          <span class="holding-name">에코프로</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:88.0%;"></div>
+          </div>
+          <span class="holding-pct">5.90%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">3</span>
+          <span class="holding-name">에코프로비엠</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:73.0%;"></div>
+          </div>
+          <span class="holding-pct">4.94%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">4</span>
+          <span class="holding-name">주성엔지니어링</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:48.0%;"></div>
+          </div>
+          <span class="holding-pct">3.26%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">5</span>
+          <span class="holding-name">HLB</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:48.0%;"></div>
+          </div>
+          <span class="holding-pct">3.25%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">6</span>
+          <span class="holding-name">펩트론</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:42.0%;"></div>
+          </div>
+          <span class="holding-pct">2.86%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">7</span>
+          <span class="holding-name">레인보우로보틱스</span>
+          
+          <span class="mkt-tag kosdaq">
+            KOSDAQ
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:40.0%;"></div>
+          </div>
+          <span class="holding-pct">2.72%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">8</span>
+          <span class="holding-name">리노공업</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:36.0%;"></div>
+          </div>
+          <span class="holding-pct">2.41%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">9</span>
+          <span class="holding-name">에이비엘바이오</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:32.0%;"></div>
+          </div>
+          <span class="holding-pct">2.12%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">10</span>
+          <span class="holding-name">원익IPS</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:29.0%;"></div>
+          </div>
+          <span class="holding-pct">1.97%</span>
+        </div>
+        
+        <div class="holding-note">2026. 06. 09 기준 · 현금성자산 제외</div>
+      </div>
+
+      <!-- RIGHT: Sector Donut -->
+      <div>
+        <div class="section-title">KRX 업종별 비중</div>
+        
+        <div style="height:148px; position:relative;">
+          <canvas id="donutChart"></canvas>
+        </div>
+        <div class="sector-legend">
+          
+          <div class="sector-item">
+            <span class="sector-dot" style="background:#0047B3;"></span>
+            <span>기타</span>
+            <b style="margin-left:auto; font-size:9.5px;">33.4%</b>
+          </div>
+          
+          <div class="sector-item">
+            <span class="sector-dot" style="background:#F5A800;"></span>
+            <span>자본재</span>
+            <b style="margin-left:auto; font-size:9.5px;">2.7%</b>
+          </div>
+          
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- ── 주요 지표 요약 바 (6칸) ── -->
+    <hr class="div" style="margin:14px 0 10px;">
+    
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--gray-2);border-radius:6px;overflow:hidden;">
+      <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">상장이후 최고가</div>
+        
+        <div style="font-size:13px;font-weight:800;color:var(--red);">20,583<span style="font-size:9px;font-weight:400;">원</span></div>
+        <div style="font-size:8.5px;color:var(--gray-text);">2026.04.27</div>
+        
+      </div>
+      <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">상장이후 최저가</div>
+        
+        <div style="font-size:13px;font-weight:800;color:#1B6CF2;">15,692<span style="font-size:9px;font-weight:400;">원</span></div>
+        <div style="font-size:8.5px;color:var(--gray-text);">2026.06.08</div>
+        
+      </div>
+      <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">평균 괴리율</div>
+        
+        <div style="font-size:13px;font-weight:800;color:var(--blue-dark);">0.31<span style="font-size:9px;font-weight:400;">%</span></div>
+        <div style="font-size:8.5px;color:var(--gray-text);">NAV vs 시장가격</div>
+        
+      </div>
+      <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">분배금 지급기준일</div>
+        <div style="font-size:10px;font-weight:600;color:var(--blue-dark);line-height:1.6;">—</div>
+      </div>
+      <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">리밸런싱 주기</div>
+        <div style="font-size:10px;font-weight:600;color:var(--blue-dark);">—</div>
+      </div>
+      <div style="padding:9px 10px;">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">최근 분배금</div>
+        
+        
+        <div style="font-size:9px;color:var(--gray-3);">지급 이력 없음</div>
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-disc">※ 이 자료는 KB자산운용(주)이 투자판단 참고용으로 제공하는 것으로, 투자권유 목적이 아닙니다. 과거 성과가 미래 수익을 보장하지 않습니다.</div>
+    <div class="footer-logo">RISE ETF · KB자산운용</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════ PAGE 2 ═══════════════════ -->
+<div class="page">
+  <div class="header-slim header">
+    <div class="header-top">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <span class="brand-badge">RISE ETF</span>
+        <span style="color:#fff;font-size:14px;font-weight:700;letter-spacing:-.2px;">RISE 코스닥150</span>
+        <span style="color:rgba(255,255,255,.4);font-size:11px;">232080</span>
+      </div>
+      <span class="header-date">2026. 06. 09 기준</span>
+    </div>
+    <div class="gold-bar"></div>
+  </div>
+
+  <div class="body" style="flex:1;">
+    <div class="page2-grid">
+
+      <!-- LEFT: 방법론 + 뉴스 -->
+      <div>
+        <div class="section-title">지수 방법론</div>
+        <div class="method-card">
+          <div class="method-title">코스닥150 지수</div>
+          
+          <div class="kchips">
+            
+            <span class="kchip gold">코스닥150</span>
+            
+            <span class="kchip ">코스닥</span>
+            
+            <span class="kchip ">중소형성장주</span>
+            
+          </div>
+        </div>
+
+        <!-- ETF 뉴스 -->
+        <div class="section-title" style="margin-top:10px;">
+          ETF 관련 뉴스
+          <span style="font-size:9px;color:var(--gray-text);font-weight:400;border-left:none;padding-left:6px;">Google News 기준</span>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num">1</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMigAFBVV95cUxNZHRCUlpQSWhiREtpY0hsWklCMmtoTEhhSDZUU1pSMlhKNmlyRmM3WGpYX01KYW5vS0llQlNBUWNmMmlkcnZ6eDZSUDBFeHdQQ3B6QXVzd2FZajNfQlVlQmw2MTNuNU92bi1xaFhtaUUyM0kxYTQxMGhTQl9PVHgyOQ?oc=5" target="_blank">코스피200·코스닥150 구성 종목 달라진다...‘500조 육박’ ETF 자금이 새롭게 몰릴 곳은?</a>
+            <span class="news-meta">조선일보 · 2026.05.24</span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num">2</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMicEFVX3lxTFBLbFhXa1hpc3BfWFZEaF9ic2Y1T1ZBMHpfRUZtTXlHMzZSdjRYaGd3X3VFcGFmSVFaTlpfRkVWWGVaWmZicks0X1hBazI1Y0hGcHIydzh6a2tnVDlKYzUzSTd3dVl0Z3U3T0k0N3NIbXbSAXRBVV95cUxOVjM3bkpJUVdIYk1rUnBET3NGQWtBVUNtMk5vcndEMG5aV2U0alVzVmdla3M0eVYxYUFQS3VlSUVxWEhhWVMxMnBoYlhWN2ktc3VLU2tLS1RCcG5ndjhrMEd0c2NCTGRqVlR3SkVUR2VPcTdjeg?oc=5" target="_blank">맥없이 제자리로 돌아온 코스닥···“투자할 기업이 없다”</a>
+            <span class="news-meta">이뉴스투데이 · 2026.06.09</span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num">3</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMifkFVX3lxTE5wZjFSVE1ZOEZnZHBEX2tVTmVvYnV3dGdpdzhnNFUxTnF4emtRV2YxUWRIWDdzWWZhdW9GcmcxaTRBcHZGNUFJeUNvellDUE9KbnJESGtFOUNuV2FOZmRreWthQnNxcmJOWUtFWms0OTF0VUdfcVNhZnBCZ1Uydw?oc=5" target="_blank">[마감시황] 코스닥, 하루 만에 6.19% 급반등…외국인·기관 동반 매수에 967.81 마감</a>
+            <span class="news-meta">서울신문 · 2026.06.09</span>
+          </div>
+        </div>
+        
+
+        <!-- 구성종목 관련 뉴스 -->
+        
+        <div class="section-title" style="margin-top:10px;">주요 종목 뉴스</div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gold);">1</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMiiAFBVV95cUxNc3VtSTI4WWFQOUVqbkZkYnY4NlJIZGVheDZvYTltQThrQzhKMzQzOUd2TkJHQy1peUVScTZKREJXRTBlZXNlNXZ4U0pBMnJzeGtqZ0hDMHFTNmYyOUJqRVpZemt5cUZtcExrMGE4NURtYldvMFNNeU1pMjJxbUFVc0toeXkxa2Mt0gGcAUFVX3lxTFBISm1LR1NybHhNYXVvOGI2dFhFd2o2dkZacnBWdU1udFJLeUthSkpham50V21LdzYxM1VfY1Vnb2t3cktiTFo0UUMyNGI2SUR1QW1IQWExLWRNYTVlVk1Db1dXZVFWdTFNQm1QWHdYelNpR1pSYU8zV0hpR1ZoeUFZVFQ1RjBxYjFUQXBDYkgwYnVuMXA4RlBFUU5heg?oc=5" target="_blank">[특징주] 알테오젠, 유럽특허청 특허 허여 결정 소식에…16% 급등 - 조선비즈</a>
+            <span class="news-meta">
+              <span class="news-stock">[알테오젠]</span> 
+              Chosunbiz · 2026.06.09
+            </span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gold);">2</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMiW0FVX3lxTE9XWGxYY0U3SldScEpiTWtsclRJcFRvbWdvUk5RSWlEdmJBVUNHQjhCdkhZdmFLMEFOTHo0YUczb0VWTHdVbDZ6NVN4bkhETmpZREtlaV85RzNWeGc?oc=5" target="_blank">[에코프로비엠] 상승못한이유는 분명하게 있었다. 대응법과 상장날짜 공개 Elias Pettersson (vdHB5xztvC)</a>
+            <span class="news-meta">
+              <span class="news-stock">[에코프로]</span> 
+              Mshale · 2026.06.09
+            </span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gold);">3</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMic0FVX3lxTE5ZdVc0ZVNCaXdMYWdfMDVDUHByQnNydnEyM1BKZnNHU29tYUpOaUFQeHFuaVgyelVLSlQ0eFMyRTcwT1d5eTRZMlRJLUU5QU95aHpOaWlLWUtSb2RzWFo1bVd1TXkzVjBoNFpfVnNmLXR0QXc?oc=5" target="_blank">2차전지주 강세에 에코프로비엠 주가 장중 11%대 올라, 코스닥 시총 1위 복귀</a>
+            <span class="news-meta">
+              <span class="news-stock">[에코프로비엠]</span> 
+              비즈니스포스트 · 2026.05.22
+            </span>
+          </div>
+        </div>
+        
+        
+
+        <!-- 매크로 뉴스 -->
+        
+        <div class="section-title" style="margin-top:10px;">시장 주요 이슈</div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gray-text);">1</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMifkFVX3lxTFA0OWx2OEtjLV9SSldVX0FqV21oR2V2bHhVeVViWHJkZzc3a3FjU1FUQ0p4ZUlDVnJKQnJhS0FMSmVvdlhqMy02NGRYV1dEZmFJRlU1RTVfdEVzb3J5Tm9kRTlPZlJzU0M2SF9Oc1I2MVFkc3Q0Y1RnajdNTkZFdw?oc=5" target="_blank">[마감시황] 코스피, 하루 만에 8.18% 급반등…8096.93 마감</a>
+            <span class="news-meta">서울신문 · 2026.06.09</span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gray-text);">2</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMiaEFVX3lxTFAydFdWS05sNC1VZVB1U0c3aEJqOTlvWmpfUmxucl94eGFPbDFiZG55SjRTeG9aSmRxa3EweFdyLU9kV181YUQ0enhyRGdIUlZGTTRsb3M2cTVaZi1OczMwWm4wcUNwWFFU0gFuQVVfeXFMT0FHZUcwZ2Y1c2Q0Wkh1NWQ5UTY2X1huS2hTcWVvdlFyMkEwR25pbm5GQ3NOUlpXSHBrTTRITjlVMk5uWTNrR2pScnpGNmJWblUtR05pMkF3cjhCVW1BVVIwbm5CZnJTWV9rNjluUlE?oc=5" target="_blank">지표·전문가는 '美금리인상' 가리켰다… 16일 FOMC 주목 - 머니투데이</a>
+            <span class="news-meta">머니투데이 · 2026.06.08</span>
+          </div>
+        </div>
+        
+        
+      </div>
+
+      <!-- RIGHT: 일별 테이블 + 전망 + 핵심 포인트 -->
+      <div>
+        <div class="section-title">일별 기준가격 (전일 종가 기준)</div>
+        <table class="perf-table" style="margin-bottom:10px;">
+          <thead>
+            <tr><th>날짜</th><th>NAV (원)</th><th>시장가 (원)</th><th>거래량 (주)</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.05</td>
+              <td style="font-weight:700;">17,493</td>
+              <td>17,475</td>
+              <td style="font-size:10px;color:var(--gray-text);">345,891</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.04</td>
+              <td style="font-weight:700;">18,479</td>
+              <td>18,470</td>
+              <td style="font-size:10px;color:var(--gray-text);">857,114</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.02</td>
+              <td style="font-weight:700;">17,880</td>
+              <td>17,855</td>
+              <td style="font-size:10px;color:var(--gray-text);">1,045,024</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.01</td>
+              <td style="font-weight:700;">18,309</td>
+              <td>18,310</td>
+              <td style="font-size:10px;color:var(--gray-text);">577,779</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.05.29</td>
+              <td style="font-weight:700;">18,635</td>
+              <td>18,610</td>
+              <td style="font-size:10px;color:var(--gray-text);">604,408</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.05.28</td>
+              <td style="font-weight:700;">19,084</td>
+              <td>19,020</td>
+              <td style="font-size:10px;color:var(--gray-text);">995,029</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.05.27</td>
+              <td style="font-weight:700;">19,466</td>
+              <td>19,360</td>
+              <td style="font-size:10px;color:var(--gray-text);">810,160</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.05.26</td>
+              <td style="font-weight:700;">19,945</td>
+              <td>19,860</td>
+              <td style="font-size:10px;color:var(--gray-text);">1,123,926</td>
+            </tr>
+            
+          </tbody>
+        </table>
+
+        <!-- 전망 & 리스크 (나란히, 간격 없음) -->
+        <div class="section-title">전망 및 주요 리스크</div>
+        <div style="display:flex;gap:8px;">
+          <div class="outlook-box pos" style="flex:1;margin-bottom:0;">
+            <div class="outlook-title pos">▲ 긍정적 전망</div>
+            <ul class="outlook-list">
+              
+            </ul>
+          </div>
+          <div class="outlook-box neg" style="flex:1;margin-bottom:0;">
+            <div class="outlook-title neg">▲ 주요 리스크</div>
+            <ul class="outlook-list">
+              
+            </ul>
+          </div>
+        </div>
+
+        <!-- 투자 POINT -->
+        <div class="section-title" style="margin-top:10px;">투자 POINT</div>
+        
+        
+        <div style="color:var(--gray-text);font-size:10px;">config.py의 investment_points를 입력해주세요.</div>
+        
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-disc">
+      ※ 이 상품은 예금자보호법에 따라 보호되지 않으며 투자원금 손실(0~100%)이 발생할 수 있습니다. 투자 전 (간이)투자설명서를 반드시 읽어보시기 바랍니다.
+      &nbsp;|&nbsp; 기초지수: 코스닥150 지수
+      &nbsp;|&nbsp; 수탁: 하나은행
+    </div>
+    <div class="footer-logo">RISE ETF · KB자산운용</div>
+  </div>
+</div>
+
+
+<script>
+/* ── 데이터 주입 (Jinja2 → JS) ── */
+var NAV_RAW, BM_RAW, BM_NAME, S_LABELS, S_WEIGHTS, S_COLORS;
+try {
+  NAV_RAW  = [{"date": "2026.03.10", "nav": 20004.29, "price": 19945, "volume": 1622243}, {"date": "2026.03.11", "nav": 19647.48, "price": 19545, "volume": 932227}, {"date": "2026.03.12", "nav": 19732.57, "price": 19680, "volume": 826866}, {"date": "2026.03.13", "nav": 19833.01, "price": 19785, "volume": 690548}, {"date": "2026.03.14", "nav": 19832.9, "price": null, "volume": null}, {"date": "2026.03.15", "nav": 19832.79, "price": null, "volume": null}, {"date": "2026.03.16", "nav": 19570.95, "price": 19535, "volume": 362643}, {"date": "2026.03.17", "nav": 19564.19, "price": 19520, "volume": 357361}, {"date": "2026.03.18", "nav": 20130.67, "price": 20100, "volume": 356457}, {"date": "2026.03.19", "nav": 19710.45, "price": 19650, "volume": 218985}, {"date": "2026.03.20", "nav": 20024.76, "price": 19950, "volume": 336208}, {"date": "2026.03.21", "nav": 20024.65, "price": null, "volume": null}, {"date": "2026.03.22", "nav": 20024.54, "price": null, "volume": null}, {"date": "2026.03.23", "nav": 18871.28, "price": 18895, "volume": 511727}, {"date": "2026.03.24", "nav": 19372.18, "price": 19280, "volume": 469306}, {"date": "2026.03.25", "nav": 20034.0, "price": 19980, "volume": 429420}, {"date": "2026.03.26", "nav": 19591.57, "price": 19520, "volume": 417067}, {"date": "2026.03.27", "nav": 19714.55, "price": 19680, "volume": 457509}, {"date": "2026.03.28", "nav": 19714.53, "price": null, "volume": null}, {"date": "2026.03.29", "nav": 19714.52, "price": null, "volume": null}, {"date": "2026.03.30", "nav": 19118.46, "price": 19080, "volume": 230432}, {"date": "2026.03.31", "nav": 18069.89, "price": 18020, "volume": 418143}, {"date": "2026.04.01", "nav": 19128.78, "price": 19100, "volume": 359928}, {"date": "2026.04.02", "nav": 17950.57, "price": 17990, "volume": 307324}, {"date": "2026.04.03", "nav": 18001.6, "price": 17965, "volume": 129095}, {"date": "2026.04.04", "nav": 18001.59, "price": null, "volume": null}, {"date": "2026.04.05", "nav": 18001.57, "price": null, "volume": null}, {"date": "2026.04.06", "nav": 17754.41, "price": 17685, "volume": 195894}, {"date": "2026.04.07", "nav": 17659.26, "price": 17595, "volume": 221257}, {"date": "2026.04.08", "nav": 18611.24, "price": 18540, "volume": 557111}, {"date": "2026.04.09", "nav": 18364.86, "price": 18305, "volume": 184612}, {"date": "2026.04.10", "nav": 18479.66, "price": 18425, "volume": 212813}, {"date": "2026.04.11", "nav": 18479.64, "price": null, "volume": null}, {"date": "2026.04.12", "nav": 18479.63, "price": null, "volume": null}, {"date": "2026.04.13", "nav": 18470.04, "price": 18430, "volume": 246031}, {"date": "2026.04.14", "nav": 18632.9, "price": 18595, "volume": 267957}, {"date": "2026.04.15", "nav": 19310.59, "price": 19230, "volume": 426423}, {"date": "2026.04.16", "nav": 19461.78, "price": 19410, "volume": 284211}, {"date": "2026.04.17", "nav": 19463.59, "price": 19400, "volume": 238032}, {"date": "2026.04.18", "nav": 19463.57, "price": null, "volume": null}, {"date": "2026.04.19", "nav": 19463.55, "price": null, "volume": null}, {"date": "2026.04.20", "nav": 19621.09, "price": 19555, "volume": 323506}, {"date": "2026.04.21", "nav": 19794.17, "price": 19740, "volume": 485295}, {"date": "2026.04.22", "nav": 19748.89, "price": 19715, "volume": 436187}, {"date": "2026.04.23", "nav": 19605.91, "price": 19555, "volume": 840046}, {"date": "2026.04.24", "nav": 20171.65, "price": 20155, "volume": 615008}, {"date": "2026.04.25", "nav": 20171.63, "price": null, "volume": null}, {"date": "2026.04.26", "nav": 20171.61, "price": null, "volume": null}, {"date": "2026.04.27", "nav": 20583.05, "price": 20500, "volume": 1066465}, {"date": "2026.04.28", "nav": 20331.19, "price": 20270, "volume": 581483}, {"date": "2026.04.29", "nav": 20380.99, "price": 20345, "volume": 542152}, {"date": "2026.04.30", "nav": 19772.22, "price": 19740, "volume": 576423}, {"date": "2026.05.01", "nav": 19772.21, "price": null, "volume": null}, {"date": "2026.05.02", "nav": 19772.2, "price": null, "volume": null}, {"date": "2026.05.03", "nav": 19772.19, "price": null, "volume": null}, {"date": "2026.05.04", "nav": 20129.95, "price": 20050, "volume": 495935}, {"date": "2026.05.05", "nav": 20129.94, "price": null, "volume": null}, {"date": "2026.05.06", "nav": 20184.11, "price": 20105, "volume": 922491}, {"date": "2026.05.07", "nav": 20009.81, "price": 19900, "volume": 924816}, {"date": "2026.05.08", "nav": 20057.41, "price": 19980, "volume": 831369}, {"date": "2026.05.09", "nav": 20057.4, "price": null, "volume": null}, {"date": "2026.05.10", "nav": 20057.39, "price": null, "volume": null}, {"date": "2026.05.11", "nav": 20007.14, "price": 19925, "volume": 761663}, {"date": "2026.05.12", "nav": 19539.58, "price": 19365, "volume": 1155795}, {"date": "2026.05.13", "nav": 19515.28, "price": 19395, "volume": 1026497}, {"date": "2026.05.14", "nav": 19908.46, "price": 19785, "volume": 1528406}, {"date": "2026.05.15", "nav": 18810.1, "price": 18855, "volume": 730912}, {"date": "2026.05.16", "nav": 18810.09, "price": null, "volume": null}, {"date": "2026.05.17", "nav": 18810.08, "price": null, "volume": null}, {"date": "2026.05.18", "nav": 18453.92, "price": 18360, "volume": 577380}, {"date": "2026.05.19", "nav": 18045.77, "price": 17985, "volume": 320246}, {"date": "2026.05.20", "nav": 17548.76, "price": 17485, "volume": 390083}, {"date": "2026.05.21", "nav": 18559.12, "price": 18435, "volume": 1152133}, {"date": "2026.05.22", "nav": 19708.12, "price": 19660, "volume": 1000499}, {"date": "2026.05.23", "nav": 19708.11, "price": null, "volume": null}, {"date": "2026.05.24", "nav": 19708.1, "price": null, "volume": null}, {"date": "2026.05.25", "nav": 19708.08, "price": null, "volume": null}, {"date": "2026.05.26", "nav": 19945.41, "price": 19860, "volume": 1123926}, {"date": "2026.05.27", "nav": 19466.14, "price": 19360, "volume": 810160}, {"date": "2026.05.28", "nav": 19083.81, "price": 19020, "volume": 995029}, {"date": "2026.05.29", "nav": 18634.56, "price": 18610, "volume": 604408}, {"date": "2026.05.30", "nav": 18634.55, "price": null, "volume": null}, {"date": "2026.05.31", "nav": 18634.54, "price": null, "volume": null}, {"date": "2026.06.01", "nav": 18308.82, "price": 18310, "volume": 577779}, {"date": "2026.06.02", "nav": 17879.9, "price": 17855, "volume": 1045024}, {"date": "2026.06.03", "nav": 17879.89, "price": null, "volume": null}, {"date": "2026.06.04", "nav": 18478.61, "price": 18470, "volume": 857114}, {"date": "2026.06.05", "nav": 17492.61, "price": 17475, "volume": 345891}, {"date": "2026.06.06", "nav": 17492.59, "price": null, "volume": null}, {"date": "2026.06.07", "nav": 17492.58, "price": null, "volume": null}, {"date": "2026.06.08", "nav": 15692.03, "price": 15655, "volume": 889964}];
+  BM_RAW   = [{"date": "2026.03.10", "close": 1137.6800537109375}, {"date": "2026.03.11", "close": 1136.8299560546875}, {"date": "2026.03.12", "close": 1148.4000244140625}, {"date": "2026.03.13", "close": 1152.9599609375}, {"date": "2026.03.16", "close": 1138.2900390625}, {"date": "2026.03.17", "close": 1136.93994140625}, {"date": "2026.03.18", "close": 1164.3800048828125}, {"date": "2026.03.19", "close": 1143.47998046875}, {"date": "2026.03.20", "close": 1161.52001953125}, {"date": "2026.03.23", "close": 1096.8900146484375}, {"date": "2026.03.24", "close": 1121.43994140625}, {"date": "2026.03.25", "close": 1159.550048828125}, {"date": "2026.03.26", "close": 1136.6400146484375}, {"date": "2026.03.27", "close": 1141.510009765625}, {"date": "2026.03.30", "close": 1107.050048828125}, {"date": "2026.03.31", "close": 1052.3900146484375}, {"date": "2026.04.01", "close": 1116.1800537109375}, {"date": "2026.04.02", "close": 1056.3399658203125}, {"date": "2026.04.03", "close": 1063.75}, {"date": "2026.04.06", "close": 1047.3699951171875}, {"date": "2026.04.07", "close": 1036.72998046875}, {"date": "2026.04.08", "close": 1089.8499755859375}, {"date": "2026.04.09", "close": 1076.0}, {"date": "2026.04.10", "close": 1093.6300048828125}, {"date": "2026.04.13", "close": 1099.8399658203125}, {"date": "2026.04.14", "close": 1121.8800048828125}, {"date": "2026.04.15", "close": 1152.4300537109375}, {"date": "2026.04.16", "close": 1162.969970703125}, {"date": "2026.04.17", "close": 1170.0400390625}, {"date": "2026.04.20", "close": 1174.8499755859375}, {"date": "2026.04.21", "close": 1179.030029296875}, {"date": "2026.04.22", "close": 1181.1199951171875}, {"date": "2026.04.23", "close": 1174.31005859375}, {"date": "2026.04.24", "close": 1203.8399658203125}, {"date": "2026.04.27", "close": 1226.1800537109375}, {"date": "2026.04.28", "close": 1215.5799560546875}, {"date": "2026.04.29", "close": 1220.260009765625}, {"date": "2026.04.30", "close": 1192.3499755859375}, {"date": "2026.05.04", "close": 1213.739990234375}, {"date": "2026.05.06", "close": 1210.1700439453125}, {"date": "2026.05.07", "close": 1199.1800537109375}, {"date": "2026.05.08", "close": 1207.719970703125}, {"date": "2026.05.11", "close": 1207.3399658203125}, {"date": "2026.05.12", "close": 1179.2900390625}, {"date": "2026.05.13", "close": 1176.9300537109375}, {"date": "2026.05.14", "close": 1191.0899658203125}, {"date": "2026.05.15", "close": 1129.8199462890625}, {"date": "2026.05.18", "close": 1111.0899658203125}, {"date": "2026.05.19", "close": 1084.3599853515625}, {"date": "2026.05.20", "close": 1056.0699462890625}, {"date": "2026.05.21", "close": 1105.969970703125}, {"date": "2026.05.22", "close": 1161.1300048828125}, {"date": "2026.05.26", "close": 1172.52001953125}, {"date": "2026.05.27", "close": 1133.1300048828125}, {"date": "2026.05.28", "close": 1104.3599853515625}, {"date": "2026.05.29", "close": 1074.800048828125}, {"date": "2026.06.01", "close": 1050.030029296875}, {"date": "2026.06.02", "close": 1026.030029296875}, {"date": "2026.06.04", "close": 1049.72998046875}, {"date": "2026.06.05", "close": 1002.4400024414062}, {"date": "2026.06.08", "close": 911.3900146484375}, {"date": "2026.06.09", "close": 967.8099975585938}];
+  BM_NAME  = "KOSDAQ";
+  S_LABELS = ["기타", "자본재"];
+  S_WEIGHTS= [33.44, 2.72];
+  S_COLORS = ["#0047B3", "#F5A800"];
+} catch(e) {
+  NAV_RAW=[]; BM_RAW=[]; BM_NAME="KOSPI"; S_LABELS=[]; S_WEIGHTS=[]; S_COLORS=[];
+}
+
+/* ── 룩업맵 ── */
+var navMap = {}, bmMap = {};
+NAV_RAW.forEach(function(d){ navMap[d.date] = d.nav; });
+BM_RAW.forEach(function(d){  bmMap[d.date]  = d.close; });
+
+/* ── 거래일 전체 (price != null) ── */
+var tradeDates = NAV_RAW
+  .filter(function(d){ return d.price !== null && d.price !== undefined; })
+  .map(function(d){ return d.date; });
+
+/* ── 차트용: NAV·BM 모두 데이터 있는 공통 날짜만 사용 ── */
+var hasBmData = BM_RAW.length > 0;
+var chartDates = hasBmData
+  ? tradeDates.filter(function(d){ return navMap[d] != null && bmMap[d] != null; })
+  : tradeDates;
+if (chartDates.length === 0) chartDates = tradeDates;
+
+function r2(n){ return Math.round(n*100)/100; }
+
+function filterDates(months) {
+  /* chartDates(공통 날짜) 기준으로 기간 필터 */
+  if (!months || !chartDates.length) return chartDates;
+  var cut = new Date();
+  cut.setMonth(cut.getMonth() - months);
+  var filtered = chartDates.filter(function(d){
+    return new Date(d.replace(/\./g,'-')) >= cut;
+  });
+  return filtered.length > 1 ? filtered : chartDates;
+}
+
+function toPct(dates, map) {
+  var vals = dates.map(function(d){ return (map[d] !== undefined) ? map[d] : null; });
+  var base = null;
+  for(var i=0;i<vals.length;i++){ if(vals[i]!==null){ base=vals[i]; break; } }
+  if(!base) return vals.map(function(){ return null; });
+  return vals.map(function(v){ return v!==null ? r2((v/base-1)*100) : null; });
+}
+
+var navChart = null;
+
+function setP(period, btn) {
+  document.querySelectorAll('.ctab').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  if(!navChart) return;
+
+  var monthMap = {'1m':1,'3m':3,'6m':6,'1y':12};
+  var months = monthMap[period] || null;
+  var dates  = filterDates(months);
+
+  /* ── BM 정렬 수정: NAV·BM 첫 공통일을 기준점으로 ── */
+  var navBase = null, bmBase = null, commonDate = null;
+  for (var i = 0; i < dates.length; i++) {
+    var d = dates[i];
+    if (navMap[d] != null && bmMap[d] != null) {
+      navBase = navMap[d];
+      bmBase  = bmMap[d];
+      commonDate = d;
+      break;
+    }
+  }
+  /* 공통일이 없으면 각각 첫 값으로 독립 리베이스 */
+  if (!navBase) {
+    for (var j = 0; j < dates.length; j++) {
+      if (navMap[dates[j]] != null) { navBase = navMap[dates[j]]; break; }
+    }
+  }
+
+  var navPct = navBase ? dates.map(function(d){
+    return navMap[d] != null ? r2((navMap[d]/navBase-1)*100) : null;
+  }) : [];
+  var bmPct = bmBase ? dates.map(function(d){
+    return bmMap[d] != null ? r2((bmMap[d]/bmBase-1)*100) : null;
+  }) : dates.map(function(){ return null; });
+
+  /* 범례에 기준일 표시 */
+  var note = document.getElementById('chartBaseNote');
+  if (note && commonDate) {
+    note.textContent = '※ ' + commonDate + ' 기준 상대수익률(%) · 전일 종가';
+  }
+
+  navChart.data.labels            = dates;
+  navChart.data.datasets[0].data  = navPct;
+  navChart.data.datasets[1].data  = bmPct;
+  navChart.update('none');
+}
+
+/* ── 초기화 (Chart.js 로드 후 실행) ── */
+function initCharts() {
+  /* 1. NAV 라인차트 */
+  var navEl = document.getElementById('navChart');
+  if (navEl && tradeDates.length > 0) {
+    var ctx  = navEl.getContext('2d');
+    /* 음영(fill) 없는 클린 라인 차트 */
+
+  /* 초기 차트 데이터: chartDates(공통 날짜) 기준 */
+  var initNavBase = chartDates.length ? navMap[chartDates[0]] : null;
+  var initBmBase  = chartDates.length ? bmMap[chartDates[0]]  : null;
+  var initNavPct = initNavBase ? chartDates.map(function(d){ return navMap[d]!=null?r2((navMap[d]/initNavBase-1)*100):null; }) : [];
+  var initBmPct  = initBmBase  ? chartDates.map(function(d){ return bmMap[d] !=null?r2((bmMap[d]/initBmBase-1)*100):null;  }) : chartDates.map(function(){return null;});
+
+    navChart = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: chartDates,
+        datasets:[
+          { label:'NAV', data: initNavPct,
+            borderColor:'#0047B3', borderWidth:2.2,
+            backgroundColor:'transparent', fill:false, tension:0.3,
+            pointRadius:0, pointHoverRadius:4,
+            spanGaps: false },
+          { label: BM_NAME, data: initBmPct,
+            borderColor:'#B0B8CC', borderWidth:1.5,
+            backgroundColor:'transparent', fill:false, tension:0.3,
+            pointRadius:0, pointHoverRadius:4,
+            borderDash:[5,3], spanGaps: false }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{
+            display:true, position:'top', align:'end',
+            labels:{font:{size:9}, usePointStyle:true, padding:10,
+                    boxWidth:12, boxHeight:2}
+          },
+          tooltip:{
+            backgroundColor:'#002B6E', padding:10,
+            callbacks:{
+              title: function(items){ return items[0].label; },
+              label: function(item){
+                var v = item.parsed.y;
+                if(v===null) return '';
+                return ' '+item.dataset.label+': '+(v>=0?'+':'')+v.toFixed(2)+'%';
+              }
+            }
+          }
+        },
+        scales:{
+          x:{grid:{color:'#F0F2F7'},
+             ticks:{font:{size:8.5},color:'#8896B3',maxTicksLimit:7}},
+          y:{grid:{color:'#F0F2F7'},
+             ticks:{font:{size:8.5},color:'#8896B3',
+               callback:function(v){ return (v>=0?'+':'')+v+'%'; }}}
+        }
+      }
+    });
+
+    /* 기본 탭: 상장 1개월 이내면 '전체', 아니면 '1m' */
+    var defPeriod = tradeDates.length <= 22 ? 'all' : '1m';
+    var defBtns = document.querySelectorAll('.ctab');
+    defBtns.forEach(function(b){
+      if(b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'"+defPeriod+"'") >= 0){
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+  } else if(navEl) {
+    navEl.parentElement.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:182px;color:var(--gray-text);font-size:11px;">차트 데이터 없음</div>';
+  }
+
+  /* 2. 업종 도넛 */
+  var donutEl = document.getElementById('donutChart');
+  if (donutEl && S_LABELS && S_LABELS.length > 0) {
+    new Chart(donutEl.getContext('2d'), {
+      type:'doughnut',
+      data:{
+        labels: S_LABELS,
+        datasets:[{ data: S_WEIGHTS,
+                    backgroundColor: S_COLORS,
+                    borderWidth:2, borderColor:'#fff', hoverOffset:5 }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false, cutout:'63%',
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:'#002B6E',
+            callbacks:{
+              label: function(c){ return ' '+c.label+': '+c.parsed.toFixed(1)+'%'; }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+/* Chart.js가 로드됐는지 확인 후 실행 */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCharts);
+} else {
+  initCharts();
+}
+</script>
+</body>
+</html>
