@@ -52,8 +52,11 @@ class FactsheetRenderer:
         latest  = data.get("latest", {})
         avg_vol = data.get("avg_volume_20d")
 
-        # 상장일
-        listing_str   = nav[0]["date"] if nav else etf_config.get("listing_date", "—")
+        # 상장일: page_meta > config > nav 첫 날짜
+        page_meta     = data.get("page_meta", {})
+        _cfg_listing  = (etf_config.get("listing_date", "") or "").replace("-", ".")
+        listing_str   = (page_meta.get("listing_date") or _cfg_listing
+                         or (nav[0]["date"] if nav else "—"))
 
         # 평균 거래량 → 만주 단위
         avg_vol_fmt   = f"{avg_vol // 10000:,.0f}" if avg_vol else "—"

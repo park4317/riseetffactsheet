@@ -464,6 +464,13 @@ class RISECollector:
         perf  = self.get_performance()
         daily = self.get_daily_returns()
 
+        # since_listing: NAV 이력에서 직접 계산 (RISE 웹사이트보다 신뢰도 높음)
+        if nav and len(nav) >= 2:
+            first_nav = nav[0]["nav"]
+            last_nav  = nav[-1]["nav"]
+            if first_nav and first_nav > 0:
+                perf["since_listing"] = round((last_nav / first_nav - 1) * 100, 2)
+
         # 4. 분배금 수집 — 템플릿에서 제거됨, 수집 생략
         distribution_history = []
 

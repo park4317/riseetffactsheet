@@ -562,12 +562,23 @@ var tradeDates = NAV_RAW
   .filter(function(d){ return d.price !== null && d.price !== undefined; })
   .map(function(d){ return d.date; });
 
-/* ── 차트용: NAV·BM 모두 데이터 있는 공통 날짜만 사용 ── */
+/* ── BM 날짜 정렬 (최근접 매핑용) ── */
+var bmSortedDates = Object.keys(bmMap).sort();
+function nearestBm(d) {
+  /* d와 같거나 직전의 BM 날짜를 찾아 값 반환 */
+  if (bmMap[d] != null) return bmMap[d];
+  var lo = 0, hi = bmSortedDates.length - 1, best = null;
+  while (lo <= hi) {
+    var mid = (lo + hi) >> 1;
+    if (bmSortedDates[mid] <= d) { best = bmSortedDates[mid]; lo = mid + 1; }
+    else { hi = mid - 1; }
+  }
+  return best ? bmMap[best] : null;
+}
+
+/* ── 차트용: NAV 거래일 기준, BM은 최근접 날짜로 채움 ── */
 var hasBmData = BM_RAW.length > 0;
-var chartDates = hasBmData
-  ? tradeDates.filter(function(d){ return navMap[d] != null && bmMap[d] != null; })
-  : tradeDates;
-if (chartDates.length === 0) chartDates = tradeDates;
+var chartDates = tradeDates;
 
 function r2(n){ return Math.round(n*100)/100; }
 
@@ -605,25 +616,20 @@ function setP(period, btn) {
   var navBase = null, bmBase = null, commonDate = null;
   for (var i = 0; i < dates.length; i++) {
     var d = dates[i];
-    if (navMap[d] != null && bmMap[d] != null) {
-      navBase = navMap[d];
-      bmBase  = bmMap[d];
-      commonDate = d;
-      break;
-    }
-  }
-  /* 공통일이 없으면 각각 첫 값으로 독립 리베이스 */
-  if (!navBase) {
-    for (var j = 0; j < dates.length; j++) {
-      if (navMap[dates[j]] != null) { navBase = navMap[dates[j]]; break; }
+    var bv = nearestBm(d);
+    if (navMap[d] != null) {
+      if (!navBase) { navBase = navMap[d]; }
+      if (!bmBase && bv != null) { bmBase = bv; commonDate = d; }
+      if (navBase && bmBase) break;
     }
   }
 
   var navPct = navBase ? dates.map(function(d){
     return navMap[d] != null ? r2((navMap[d]/navBase-1)*100) : null;
   }) : [];
-  var bmPct = bmBase ? dates.map(function(d){
-    return bmMap[d] != null ? r2((bmMap[d]/bmBase-1)*100) : null;
+  var bmPct = (hasBmData && bmBase) ? dates.map(function(d){
+    var bv = nearestBm(d);
+    return bv != null ? r2((bv/bmBase-1)*100) : null;
   }) : dates.map(function(){ return null; });
 
   /* 범례에 기준일 표시 */
