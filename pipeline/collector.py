@@ -68,10 +68,12 @@ class RISECollector:
         def safe_int(v):
             try: return int(float(str(v).replace(",", "")))
             except: return None
+        def to_str_list(df, i):
+            return [str(x) for x in df.iloc[i].tolist()]
 
         def find_header_row(df):
             for i in range(min(10, len(df))):
-                row = df.iloc[i].astype(str).tolist()
+                row = to_str_list(df, i)
                 if any("일자" in v for v in row):
                     return i
                 if any(re.match(r'\d{4}\.\d{2}\.\d{2}', v) for v in row):
@@ -85,14 +87,18 @@ class RISECollector:
                         return i
             return None
 
+        def _col(header, *kws, default=1):
+            v = find_col(header, *kws)
+            return default if v is None else v
+
         records = {}
 
         if df2 is not None:
             hi2  = find_header_row(df2)
-            h2   = df2.iloc[hi2].astype(str).tolist()
-            c_date  = find_col(h2, "일자") or 1
-            c_nav   = find_col(h2, "기준가격") or 2
-            c_price = find_col(h2, "시장가격") or 4
+            h2   = to_str_list(df2, hi2)
+            c_date  = _col(h2, "일자", default=1)
+            c_nav   = _col(h2, "기준가격", default=2)
+            c_price = _col(h2, "시장가격", default=4)
 
             for _, row in df2.iloc[hi2 + 1:].iterrows():
                 d = str(row.iloc[c_date]).strip()
@@ -110,10 +116,10 @@ class RISECollector:
 
         if df1 is not None:
             hi1     = find_header_row(df1)
-            h1      = df1.iloc[hi1].astype(str).tolist()
-            c_date1 = find_col(h1, "일자") or 1
-            c_vol   = find_col(h1, "거래량") or 5
-            c_px1   = find_col(h1, "시장가격") or 4
+            h1      = to_str_list(df1, hi1)
+            c_date1 = _col(h1, "일자", default=1)
+            c_vol   = _col(h1, "거래량", default=5)
+            c_px1   = _col(h1, "시장가격", default=4)
 
             for _, row in df1.iloc[hi1 + 1:].iterrows():
                 d = str(row.iloc[c_date1]).strip()
@@ -140,23 +146,27 @@ class RISECollector:
 
             header_idx = None
             for i in range(min(12, len(df))):
-                row_str = df.iloc[i].astype(str).tolist()
+                row_str = [str(x) for x in df.iloc[i].tolist()]
                 if any(k in row_str for k in key_map):
+                    header_idx = i
+                    break
+                # 부분 일치도 허용
+                joined = " ".join(row_str)
+                if any(k in joined for k in key_map):
                     header_idx = i
                     break
             if header_idx is None:
                 print("  [수익률 경고] 헤더 행 미발견")
                 return perf
 
-            header = df.iloc[header_idx].astype(str).tolist()
+            header = [str(x) for x in df.iloc[header_idx].tolist()]
 
             nav_row = None
             for i in range(header_idx + 1, min(header_idx + 5, len(df))):
-                row = df.iloc[i].tolist()
-                row_str = [str(v) for v in row]
+                row_str = [str(v) for v in df.iloc[i].tolist()]
                 num_count = sum(1 for v in row_str if re.match(r'^-?\d+\.?\d*$', v.strip()))
                 if num_count >= 3:
-                    nav_row = row
+                    nav_row = row_str
                     break
 
             if nav_row is None:
@@ -164,7 +174,7 @@ class RISECollector:
                 return perf
 
             for i, col_name in enumerate(header):
-                k = key_map.get(col_name.strip())
+                k = key_map.get(str(col_name).strip())
                 if k and i < len(nav_row):
                     try:
                         val = float(str(nav_row[i]).replace(",", "").replace("%", ""))
