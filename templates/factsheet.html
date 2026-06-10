@@ -326,14 +326,14 @@
       <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
         <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">{{ period_label }} 최고가</div>
         {% if nav_high %}
-        <div style="font-size:13px;font-weight:800;color:var(--red);">{{ "{:,.0f}".format(nav_high.price) }}<span style="font-size:9px;font-weight:400;">원</span></div>
+        <div style="font-size:13px;font-weight:800;color:var(--red);">{{ "{:,.0f}".format(nav_high.nav) }}<span style="font-size:9px;font-weight:400;">원</span></div>
         <div style="font-size:8.5px;color:var(--gray-text);">{{ nav_high.date }}</div>
         {% else %}<div style="font-size:13px;color:var(--gray-3);">—</div>{% endif %}
       </div>
       <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
         <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">{{ period_label }} 최저가</div>
         {% if nav_low %}
-        <div style="font-size:13px;font-weight:800;color:#1B6CF2;">{{ "{:,.0f}".format(nav_low.price) }}<span style="font-size:9px;font-weight:400;">원</span></div>
+        <div style="font-size:13px;font-weight:800;color:#1B6CF2;">{{ "{:,.0f}".format(nav_low.nav) }}<span style="font-size:9px;font-weight:400;">원</span></div>
         <div style="font-size:8.5px;color:var(--gray-text);">{{ nav_low.date }}</div>
         {% else %}<div style="font-size:13px;color:var(--gray-3);">—</div>{% endif %}
       </div>
