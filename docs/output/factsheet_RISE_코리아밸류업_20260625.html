@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>RISE 코리아밸류업 ETF 팩트시트</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue-dark:  #002B6E; --blue-mid: #0047B3; --blue-light: #E8F0FD;
+      --gold: #F5A800; --gold-light: #FFF8E0;
+      --red: #E03232; --green: #0A7C42;
+      --gray-1: #F4F6FA; --gray-2: #E8ECF4; --gray-3: #C0C8DA;
+      --gray-text: #6B7A99; --text-main: #111827; --text-sub: #374151;
+    }
+    body { font-family:'Noto Sans KR',sans-serif; background:#DDE3EE; color:var(--text-main); padding:28px 20px; font-size:13px; line-height:1.5; }
+
+    /* PAGE */
+    .page { width:794px; min-height:1122px; background:#fff; margin:0 auto 28px; box-shadow:0 4px 32px rgba(0,0,0,.18); border-radius:4px; overflow:hidden; display:flex; flex-direction:column; }
+
+    /* HEADER */
+    .header { background:var(--blue-dark); }
+    .header-top { display:flex; align-items:center; justify-content:space-between; padding:13px 26px 11px; }
+    .brand { display:flex; align-items:center; gap:9px; }
+    .brand-badge { background:var(--gold); color:#fff; font-size:10px; font-weight:900; padding:2px 7px; border-radius:3px; letter-spacing:.5px; }
+    .brand-name { color:rgba(255,255,255,.8); font-size:11px; }
+    .header-date { color:rgba(255,255,255,.5); font-size:10px; }
+    .gold-bar { height:3px; background:linear-gradient(90deg,var(--gold) 0%,#FFD66E 60%,transparent 100%); }
+    .header-body { padding:14px 26px 18px; }
+    .etf-tags { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:7px; }
+    .tag { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:rgba(255,255,255,.9); font-size:10px; font-weight:500; padding:2px 8px; border-radius:20px; }
+    .tag.accent { background:var(--gold); border-color:var(--gold); color:#fff; font-weight:700; }
+    .etf-name { font-size:21px; font-weight:900; color:#fff; letter-spacing:-.3px; margin-bottom:5px; }
+    .etf-ticker { color:rgba(255,255,255,.45); font-size:11px; font-weight:400; margin-left:7px; }
+    .etf-desc { font-size:11.5px; color:rgba(255,255,255,.72); line-height:1.55; }
+
+    /* SLIM HEADER (page2) */
+    .header-slim { background:var(--blue-dark); }
+    .header-slim .header-top { padding:11px 26px; }
+
+    /* KPI */
+    .kpi-row { display:grid; grid-template-columns:repeat(6,1fr); border-bottom:1px solid var(--gray-2); }
+    .kpi-card { padding:11px 14px 10px; border-right:1px solid var(--gray-2); }
+    .kpi-card:last-child { border-right:none; }
+    .kpi-label { font-size:9px; color:var(--gray-text); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+    .kpi-val { font-size:15px; font-weight:800; color:var(--blue-dark); letter-spacing:-.5px; line-height:1; }
+    .kpi-val.up { color:var(--red); }
+    .kpi-val.down { color:#1B6CF2; }
+    .kpi-sub { font-size:8.5px; color:var(--gray-text); margin-top:3px; }
+    .kpi-gold { background:var(--gold-light); }
+
+    /* BODY */
+    .body { flex:1; padding:17px 26px; }
+
+    /* SECTION TITLE */
+    .section-title { font-size:10.5px; font-weight:700; color:var(--blue-dark); letter-spacing:.5px; text-transform:uppercase; border-left:3px solid var(--gold); padding-left:7px; margin-bottom:10px; }
+
+    /* CHART TABS */
+    .chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .chart-tabs { display:flex; gap:3px; }
+    .ctab { padding:3px 9px; border:1px solid var(--gray-2); border-radius:3px; font-size:9.5px; font-weight:600; cursor:pointer; background:#fff; color:var(--gray-text); font-family:inherit; }
+    .ctab:hover { background:var(--gray-1); }
+    .ctab.active { background:var(--blue-dark); color:#fff; border-color:var(--blue-dark); }
+    .chart-wrap { position:relative; }
+    .chart-legend { display:flex; gap:14px; font-size:9px; color:var(--gray-text); margin-top:4px; margin-bottom:10px; align-items:center; }
+    .legend-line { display:inline-block; width:18px; height:2px; vertical-align:middle; margin-right:3px; border-radius:1px; }
+    .legend-dash { border-top:2px dashed; display:inline-block; width:18px; vertical-align:middle; margin-right:3px; }
+
+    /* PERIOD RETURN TABLE */
+    .perf-table { width:100%; border-collapse:collapse; margin-bottom:12px; }
+    .perf-table th { background:var(--blue-dark); color:#fff; font-size:9.5px; font-weight:600; padding:6px 4px; text-align:center; }
+    .perf-table td { text-align:center; padding:7px 4px; font-size:11px; font-weight:700; border-bottom:1px solid var(--gray-2); }
+    .perf-table td.pos { color:var(--red); }
+    .perf-table td.neg { color:#1B6CF2; }
+    .perf-table td.na  { color:var(--gray-3); font-weight:400; }
+    .perf-sub { font-size:8.5px; color:var(--gray-text); text-align:right; margin-bottom:8px; }
+
+    /* TWO COLUMNS */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .page2-grid { display:grid; grid-template-columns:1.1fr 1fr; gap:18px; }
+
+    /* HOLDINGS */
+    .holding-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+    .holding-rank { width:14px; font-size:9px; font-weight:700; color:var(--gray-text); text-align:right; flex-shrink:0; }
+    .holding-name { width:78px; font-size:11px; font-weight:600; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mkt-tag { font-size:7px; padding:1px 4px; border-radius:2px; font-weight:700; flex-shrink:0; }
+    .mkt-tag.kospi  { background:#E8F0FD; color:#0047B3; }
+    .mkt-tag.kosdaq { background:#FFF8E0; color:#9A6500; }
+    .mkt-tag.unknown { background:var(--gray-1); color:var(--gray-text); }
+    .holding-bar-wrap { flex:1; background:var(--gray-1); border-radius:3px; height:9px; overflow:hidden; }
+    .holding-bar { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--blue-mid),#4A9CF0); }
+    .holding-bar.top { background:linear-gradient(90deg,var(--gold),#FFD066); }
+    .holding-pct { width:36px; font-size:10.5px; font-weight:700; color:var(--blue-dark); text-align:right; flex-shrink:0; }
+    .holding-note { font-size:8.5px; color:var(--gray-text); margin-top:3px; }
+
+    /* SECTOR LEGEND */
+    .sector-legend { display:grid; grid-template-columns:1fr 1fr; gap:3px 8px; margin-top:6px; }
+    .sector-item { display:flex; align-items:center; gap:5px; font-size:9px; color:var(--text-sub); }
+    .sector-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+
+    /* METHOD */
+    .method-card { background:var(--blue-light); border-radius:6px; padding:11px 13px; margin-bottom:10px; }
+    .method-title { font-size:9.5px; font-weight:700; color:var(--blue-mid); margin-bottom:6px; }
+    .method-row { display:flex; gap:7px; margin-bottom:4px; }
+    .method-dot { width:5px; height:5px; border-radius:50%; background:var(--gold); flex-shrink:0; margin-top:5px; }
+    .method-text { font-size:10px; color:var(--text-sub); line-height:1.5; }
+    .kchips { display:flex; gap:4px; flex-wrap:wrap; margin-top:7px; }
+    .kchip { background:var(--blue-dark); color:#fff; font-size:9px; font-weight:600; padding:2px 7px; border-radius:3px; }
+    .kchip.gold { background:var(--gold); }
+
+    /* DISTRIBUTION */
+    .dist-row { display:flex; gap:8px; align-items:center; background:var(--gray-1); padding:7px 11px; border-radius:5px; margin-bottom:10px; }
+    .dist-label { font-size:9px; font-weight:700; color:var(--blue-dark); white-space:nowrap; }
+    .dist-value { font-size:9.5px; color:var(--text-sub); }
+
+    /* NEWS */
+    .news-item { display:flex; gap:8px; padding:8px 0; border-bottom:1px solid var(--gray-2); }
+    .news-item:last-child { border-bottom:none; }
+    .news-num { width:16px; height:16px; background:var(--blue-dark); color:#fff; font-size:8.5px; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+    .news-content { flex:1; }
+    .news-headline { font-size:10.5px; font-weight:600; color:var(--text-main); text-decoration:none; display:block; margin-bottom:2px; line-height:1.45; }
+    .news-headline:hover { color:var(--blue-mid); text-decoration:underline; }
+    .news-meta { font-size:9px; color:var(--gray-text); }
+    .news-stock { color:var(--blue-mid); font-weight:600; }
+
+    /* OUTLOOK */
+    .outlook-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+    .outlook-box { border-radius:5px; padding:9px 11px; }
+    .outlook-box.pos { background:#F0FBF5; border-left:3px solid var(--green); }
+    .outlook-box.neg { background:#FFF5F5; border-left:3px solid var(--red); }
+    .outlook-title { font-size:9.5px; font-weight:700; margin-bottom:5px; }
+    .outlook-title.pos { color:var(--green); }
+    .outlook-title.neg { color:var(--red); }
+    .outlook-list { list-style:none; }
+    .outlook-list li { font-size:9.5px; color:var(--text-sub); padding-left:10px; position:relative; margin-bottom:3px; line-height:1.5; }
+    .outlook-list li::before { content:'·'; position:absolute; left:3px; font-weight:900; }
+
+    /* DIVIDER */
+    hr.div { border:none; border-top:1px solid var(--gray-2); margin:12px 0; }
+
+    /* FOOTER */
+    .footer { background:var(--gray-1); border-top:1px solid var(--gray-2); padding:8px 26px; display:flex; justify-content:space-between; align-items:center; }
+    .footer-disc { font-size:8px; color:var(--gray-text); line-height:1.55; max-width:580px; }
+    .footer-logo { font-size:10px; font-weight:900; color:var(--blue-dark); white-space:nowrap; }
+
+    @media print {
+      body { background:#fff; padding:0; }
+      .page { box-shadow:none; border-radius:0; margin:0; page-break-after:always; }
+      .page:last-child { page-break-after:auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ PAGE 1 ═══════════════════ -->
+<div class="page">
+  <div class="header">
+    <div class="header-top">
+      <div class="brand">
+        <span class="brand-badge">RISE ETF</span>
+        <span class="brand-name">KB자산운용 | 국내주식 테마형</span>
+      </div>
+      <span class="header-date">기준일: 2026. 06. 25 &nbsp;|&nbsp; 판매사 배포용</span>
+    </div>
+    <div class="gold-bar"></div>
+    <div class="header-body">
+      <div class="etf-tags">
+        
+        <span class="tag accent">밸류업</span>
+        
+        <span class="tag ">기업가치</span>
+        
+        <span class="tag ">ROE</span>
+        
+        <span class="tag ">주주환원</span>
+        
+      </div>
+      <div class="etf-name">RISE 코리아밸류업<span class="etf-ticker"> · KRX</span></div>
+      <div class="etf-desc">수익성.주주환원.시장가치 우수 100개 기업에 투자하는 밸류업 ETF</div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">상장일</div>
+      <div class="kpi-val" style="font-size:13px;">2024.11.19</div>
+      <div class="kpi-sub">국내주식 테마형</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">순자산 (AUM)</div>
+      <div class="kpi-val" style="font-size:13px;">11,002</div>
+      <div class="kpi-sub">억원 기준</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">총 보수</div>
+      <div class="kpi-val">0.20<span style="font-size:11px;font-weight:500;">%</span></div>
+      <div class="kpi-sub">연간 기준</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">20일 평균 거래량</div>
+      <div class="kpi-val" style="font-size:13px;">211<span style="font-size:11px;font-weight:500;">만주</span></div>
+      <div class="kpi-sub">최근 20 영업일</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">구성 종목 수</div>
+      <div class="kpi-val">100<span style="font-size:11px;font-weight:500;">종목</span></div>
+      <div class="kpi-sub">6개월 리밸런싱</div>
+    </div>
+    <div class="kpi-card kpi-gold">
+      <div class="kpi-label" style="color:#9A6500;">1개월 수익률</div>
+      
+        
+      <div class="kpi-val up">+6.90<span style="font-size:11px;">%</span></div>
+        
+      
+      <div class="kpi-sub">NAV 기준 · 분배금 재투자</div>
+    </div>
+  </div>
+
+  <!-- BODY P1 -->
+  <div class="body">
+    <!-- Chart header + tabs -->
+    <div class="chart-header">
+      <div class="section-title" style="margin-bottom:0;">기준가격(NAV) 추이 <span style="color:var(--gray-text);font-weight:400;">vs KOSPI</span></div>
+      <div class="chart-tabs">
+        <button class="ctab" onclick="setP('1m',this)">1개월</button>
+        <button class="ctab" onclick="setP('3m',this)">3개월</button>
+        <button class="ctab" onclick="setP('6m',this)">6개월</button>
+        <button class="ctab" onclick="setP('1y',this)">1년</button>
+        <button class="ctab active" onclick="setP('all',this)">전체</button>
+      </div>
+    </div>
+
+    <div class="chart-wrap" style="height:195px;">
+      <canvas id="navChart"></canvas>
+    </div>
+    <div class="chart-legend">
+      <span><span class="legend-line" style="background:#0047B3;"></span>NAV</span>
+      <span><span class="legend-dash" style="color:#B0B8CC;"></span>KOSPI</span>
+      <span style="margin-left:auto;" id="chartBaseNote">※ 공통 기준일 상대수익률(%) · 전일 종가</span>
+    </div>
+
+    <!-- Period Return Table (ETF + KOSPI 2행) -->
+    <table class="perf-table" style="margin-bottom:8px;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding-left:8px;">구분</th>
+          <th>1개월</th><th>3개월</th><th>6개월</th><th>1년</th><th>3년</th><th>연초이후</th><th>상장이후</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td style="text-align:left;padding-left:8px;font-weight:700;color:var(--blue-dark);">ETF</td>
+          
+            
+          <td class="pos">+6.90%</td>
+          
+        
+          
+            
+          <td class="pos">+58.64%</td>
+          
+        
+          
+            
+          <td class="pos">+132.45%</td>
+          
+        
+          
+            
+          <td class="pos">+226.55%</td>
+          
+        
+          
+            
+          <td class="na">—</td>
+          
+        
+          
+            
+          <td class="pos">+122.62%</td>
+          
+        
+          
+            
+          <td class="pos">+316.26%</td>
+          
+        
+          
+        </tr>
+        <tr style="background:var(--gray-1);">
+          <td style="text-align:left;padding-left:8px;font-weight:700;color:var(--gray-text);">KOSPI</td>
+          
+            
+          <td class="pos">+13.79%</td>
+          
+        
+          
+            
+          <td class="pos">+54.95%</td>
+          
+        
+          
+            
+          <td class="pos">+114.94%</td>
+          
+        
+          
+            
+          <td class="pos">+208.51%</td>
+          
+        
+          
+            
+          <td class="na">—</td>
+          
+        
+          
+            
+          <td class="na">—</td>
+          
+        
+          
+            
+          <td class="pos">+261.27%</td>
+          
+        
+          
+        </tr>
+      </tbody>
+    </table>
+    <div class="perf-sub" style="margin-bottom:10px;">2026. 06. 25 기준 · 분배금 재투자 가정 세전 수익률</div>
+
+    <!-- Holdings + Donut (hr 제거해 간격 줄임) -->
+    <div class="two-col">
+      <!-- LEFT: Holdings -->
+      <div>
+        <div class="section-title">TOP 10 구성종목</div>
+        
+        
+        <div class="holding-row">
+          <span class="holding-rank">1</span>
+          <span class="holding-name">SK하이닉스</span>
+          
+          <span class="mkt-tag kospi">
+            KOSPI
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar top"
+                 style="width:100.0%;"></div>
+          </div>
+          <span class="holding-pct">23.90%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">2</span>
+          <span class="holding-name">삼성전자</span>
+          
+          <span class="mkt-tag kospi">
+            KOSPI
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:75.0%;"></div>
+          </div>
+          <span class="holding-pct">17.97%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">3</span>
+          <span class="holding-name">SK스퀘어</span>
+          
+          <span class="mkt-tag kospi">
+            KOSPI
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:48.0%;"></div>
+          </div>
+          <span class="holding-pct">11.45%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">4</span>
+          <span class="holding-name">현대차</span>
+          
+          <span class="mkt-tag kospi">
+            KOSPI
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:20.0%;"></div>
+          </div>
+          <span class="holding-pct">4.79%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">5</span>
+          <span class="holding-name">KB금융</span>
+          
+          <span class="mkt-tag kospi">
+            KOSPI
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:13.0%;"></div>
+          </div>
+          <span class="holding-pct">3.18%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">6</span>
+          <span class="holding-name">신한지주</span>
+          
+          <span class="mkt-tag kospi">
+            KOSPI
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:11.0%;"></div>
+          </div>
+          <span class="holding-pct">2.72%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">7</span>
+          <span class="holding-name">한화에어로스페이스</span>
+          
+          <span class="mkt-tag kospi">
+            KOSPI
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:10.0%;"></div>
+          </div>
+          <span class="holding-pct">2.45%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">8</span>
+          <span class="holding-name">기아</span>
+          
+          <span class="mkt-tag kospi">
+            KOSPI
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:10.0%;"></div>
+          </div>
+          <span class="holding-pct">2.34%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">9</span>
+          <span class="holding-name">현대모비스</span>
+          
+          <span class="mkt-tag kospi">
+            KOSPI
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:9.0%;"></div>
+          </div>
+          <span class="holding-pct">2.18%</span>
+        </div>
+        
+        <div class="holding-row">
+          <span class="holding-rank">10</span>
+          <span class="holding-name">하나금융지주</span>
+          
+          <span class="mkt-tag unknown">
+            —
+          </span>
+          <div class="holding-bar-wrap">
+            <div class="holding-bar "
+                 style="width:8.0%;"></div>
+          </div>
+          <span class="holding-pct">1.96%</span>
+        </div>
+        
+        <div class="holding-note">2026. 06. 25 기준 · 현금성자산 제외</div>
+      </div>
+
+      <!-- RIGHT: Sector Donut -->
+      <div>
+        <div class="section-title">KRX 업종별 비중</div>
+        
+        <div style="height:148px; position:relative;">
+          <canvas id="donutChart"></canvas>
+        </div>
+        <div class="sector-legend">
+          
+          <div class="sector-item">
+            <span class="sector-dot" style="background:#0047B3;"></span>
+            <span>반도체와반도체장비</span>
+            <b style="margin-left:auto; font-size:9.5px;">41.9%</b>
+          </div>
+          
+          <div class="sector-item">
+            <span class="sector-dot" style="background:#F5A800;"></span>
+            <span>소프트웨어와서비스</span>
+            <b style="margin-left:auto; font-size:9.5px;">11.4%</b>
+          </div>
+          
+          <div class="sector-item">
+            <span class="sector-dot" style="background:#4A9CF0;"></span>
+            <span>자동차와부품</span>
+            <b style="margin-left:auto; font-size:9.5px;">9.3%</b>
+          </div>
+          
+          <div class="sector-item">
+            <span class="sector-dot" style="background:#28A745;"></span>
+            <span>금융</span>
+            <b style="margin-left:auto; font-size:9.5px;">7.9%</b>
+          </div>
+          
+          <div class="sector-item">
+            <span class="sector-dot" style="background:#E03232;"></span>
+            <span>자본재</span>
+            <b style="margin-left:auto; font-size:9.5px;">2.5%</b>
+          </div>
+          
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- ── 주요 지표 요약 바 (6칸) ── -->
+    <hr class="div" style="margin:14px 0 10px;">
+    
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--gray-2);border-radius:6px;overflow:hidden;">
+      <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">최근 1년 최고가</div>
+        
+        <div style="font-size:13px;font-weight:800;color:var(--red);">42,432<span style="font-size:9px;font-weight:400;">원</span></div>
+        <div style="font-size:8.5px;color:var(--gray-text);">2026.06.22</div>
+        
+      </div>
+      <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">최근 1년 최저가</div>
+        
+        <div style="font-size:13px;font-weight:800;color:#1B6CF2;">9,002<span style="font-size:9px;font-weight:400;">원</span></div>
+        <div style="font-size:8.5px;color:var(--gray-text);">2025.04.09</div>
+        
+      </div>
+      <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">평균 괴리율</div>
+        
+        <div style="font-size:13px;font-weight:800;color:var(--blue-dark);">0.19<span style="font-size:9px;font-weight:400;">%</span></div>
+        <div style="font-size:8.5px;color:var(--gray-text);">NAV vs 시장가격</div>
+        
+      </div>
+      <div style="padding:9px 10px;border-right:1px solid var(--gray-2);">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">분배금 지급기준일</div>
+        
+        <div style="font-size:10px;font-weight:600;color:var(--blue-dark);line-height:1.6;">1.4.7.10월 마지막 영업일</div>
+        
+      </div>
+      <div style="padding:9px 10px;">
+        <div style="font-size:8.5px;color:var(--gray-text);font-weight:600;margin-bottom:3px;">리밸런싱 주기</div>
+        <div style="font-size:10px;font-weight:600;color:var(--blue-dark);">반기 (연 2회)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-disc">※ 이 자료는 KB자산운용(주)이 투자판단 참고용으로 제공하는 것으로, 투자권유 목적이 아닙니다. 과거 성과가 미래 수익을 보장하지 않습니다.</div>
+    <div class="footer-logo">RISE ETF · KB자산운용</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════ PAGE 2 ═══════════════════ -->
+<div class="page">
+  <div class="header-slim header">
+    <div class="header-top">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <span class="brand-badge">RISE ETF</span>
+        <span style="color:#fff;font-size:14px;font-weight:700;letter-spacing:-.2px;">RISE 코리아밸류업</span>
+        <span style="color:rgba(255,255,255,.4);font-size:11px;"></span>
+      </div>
+      <span class="header-date">2026. 06. 25 기준</span>
+    </div>
+    <div class="gold-bar"></div>
+  </div>
+
+  <div class="body" style="flex:1;">
+    <div class="page2-grid">
+
+      <!-- LEFT: 방법론 + 뉴스 -->
+      <div>
+        <div class="section-title">지수 방법론</div>
+        <div class="method-card">
+          <div class="method-title">코리아밸류업 지수</div>
+          
+        
+          
+          <div class="method-row">
+            <div class="method-dot"></div>
+            <div class="method-text"><b>밸류업 공시 기업 중 PBR·ROE 우량 종목</b> 선별</div>
+          </div>
+          
+          <div class="method-row">
+            <div class="method-dot"></div>
+            <div class="method-text"><b>시총가중 + 종목별 15% 상한</b></div>
+          </div>
+          
+          <div class="method-row">
+            <div class="method-dot"></div>
+            <div class="method-text"><b>약 100종목</b> 구성 · 반기(6월·12월) 리밸런싱</div>
+          </div>
+          
+        
+          <div class="kchips">
+            
+            <span class="kchip gold">밸류업</span>
+            
+            <span class="kchip ">기업가치</span>
+            
+            <span class="kchip ">ROE</span>
+            
+            <span class="kchip ">주주환원</span>
+            
+          </div>
+        </div>
+
+        <!-- ETF 뉴스 -->
+        <div class="section-title" style="margin-top:10px;">
+          ETF 관련 뉴스
+          <span style="font-size:9px;color:var(--gray-text);font-weight:400;border-left:none;padding-left:6px;">Google News 기준</span>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num">1</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMic0FVX3lxTE1HbHZoZnVBOERwUnkydDB1SHY3NzhVLUpRXzEzMVMtcElKekh4bnVOc3dUWV90SDJOWUVYRkVaQURCcGludFNTU1JXTm45N19KeENycERwYnhDMl9kU0paYThINXY2NVVzYk9Rd1Z4Z3Q5WW8?oc=5" target="_blank">KB자산운용, 방화동 소상공인 지원...RISE ETF 연계 상생 활동</a>
+            <span class="news-meta">디지털투데이 · 2026.06.24</span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num">2</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMiU0FVX3lxTE92bnpjd3lLYWVzSmNCb0ZPMTluVXRDZlFLaGRFQ0tBeTZXNXhSWS1MUnRmR1hiQ2NIWEczclRyaWxuRHRCT3NEejZ3ekt6WEZMTERJ0gFTQVVfeXFMT3ZuemN3eUthZXNKY0JvRk8xOW5VdENmUUtoZEVDS0F5Nlc1eFJZLUxSdGZHWGJDY0hYRzNyVHJpbG5EdEJPc0R6Nnd6S3pYRkxMREk?oc=5" target="_blank">상승장 기회·월분배 매력…올해 수익률 99% 넘었다[ETF 줌인]</a>
+            <span class="news-meta">서울경제 · 2026.06.19</span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num">3</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMiZEFVX3lxTE1FVUdJbEFtWkxRWGNIWThlMnlVNFBCQ2h1YXlDSF9ZbEtjS1loRFJfeWJHSjVneElJSWh4MFpyZlZ5b2FhUVFWc2dvMjU0R2Uwd2Z2elFUMG1oS3dvY1pMbC0xTEo?oc=5" target="_blank">[2026 미래전략포럼] "3저 호황 잇는 강세장"…K기업 밸류업 해법은?</a>
+            <span class="news-meta">서울경제TV · 2026.06.25</span>
+          </div>
+        </div>
+        
+
+        <!-- 구성종목 관련 뉴스 -->
+        
+        <div class="section-title" style="margin-top:10px;">주요 종목 뉴스</div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gold);">1</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMibEFVX3lxTE9lSmtMb1FaN2dqUG5LZnFDa0ZkZmxWNDdOXzF1eTI1RkRoSWpvd29fMVpZejlWcTB6ekprQTNvTmQzMHZnMElSeDBiOGdMZjhBWjhuQVhFaXY3aHZQLVZ1VFNGWlViYzl5RDNIdQ?oc=5" target="_blank">"지금 사도 되나요?"...SK하이닉스 목표가 보니 '충격'</a>
+            <span class="news-meta">
+              <span class="news-stock">[SK하이닉스]</span> 
+              한경매거진&북 · 2026.06.25
+            </span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gold);">2</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMiUkFVX3lxTE04WEdNUzR5N010YzRxQnRhNTZVMlRvalR6dTgzRW9JdzJnOEpnbXFRanFLRmxYWnJzWlQxTjI4RElkNVpXdzVydGtVU291Y2dCVlE?oc=5" target="_blank">“삼성전자 재평가는 이제 시작…2분기 영업익 90조 추정” 목표가↑</a>
+            <span class="news-meta">
+              <span class="news-stock">[삼성전자]</span> 
+              매일경제 마켓 · 2026.06.24
+            </span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gold);">3</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMibkFVX3lxTE5LVnBobmYxbERJd0MwYkpuY3RNcll0N0dvbjZJZFMxV3FUQXJVSkpyV0F2SXNCWTJmLWlXc0lQdkFZSTJkcFBpa3RuS2tWak9uYXFZSTV2MnBYaW0wbVc0d29HMkVNSU5pUGRsLUxR?oc=5" target="_blank">상반기만에 작년 실적 두 배… SK스퀘어, 전용기 확보로 달릴 채비 완료</a>
+            <span class="news-meta">
+              <span class="news-stock">[SK스퀘어]</span> 
+              아시아투데이 · 2026.06.24
+            </span>
+          </div>
+        </div>
+        
+        
+
+        <!-- 매크로 뉴스 -->
+        
+        <div class="section-title" style="margin-top:10px;">시장 주요 이슈</div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gray-text);">1</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMiUkFVX3lxTE9QMlFhTzV5c1FfVUliNE1QVUFsS0g4QnJtY2xUN2tGLThNa0tORmxrVW5uYkFGOFAyaHpwMFFzUFFyRjMzQ2FLSWZ5RVZjb0NVM3c?oc=5" target="_blank">“코스피서 이 주식은 피해라”…‘1만5천피’ 부른 JP모건도 경고한 종목은</a>
+            <span class="news-meta">매일경제 · 2026.06.25</span>
+          </div>
+        </div>
+        
+        <div class="news-item">
+          <div class="news-num" style="background:var(--gray-text);">2</div>
+          <div class="news-content">
+            <a class="news-headline" href="https://news.google.com/rss/articles/CBMiWkFVX3lxTE9vRDZhMU5kRFZmenVXcnBYajRTUUJtLXNjV3drSHFUX3V1SS1Za3ZmWXRsWkUwSWxreHdLbVhUQ1FZQ2s5d3pLUDQ4b3dCVjI1ZGNYeVV2MUJNQdIBX0FVX3lxTE54cjdzTDQ0dnBueXBFZ0UxSFBubEZHT1UxOUotemxKMFhoUGFvR3d4RU53SC1TTnhGN2xDc2pmNWQ5SEh1TDF3WndLd0lCUXJFOEpjdjNGQXFyMnlQR0xN?oc=5" target="_blank">기술주 약세에 숨고르기 들어간 미국 증시···나스닥·S&P 하락</a>
+            <span class="news-meta">경향신문 · 2026.06.24</span>
+          </div>
+        </div>
+        
+        
+      </div>
+
+      <!-- RIGHT: 일별 테이블 + 전망 + 핵심 포인트 -->
+      <div>
+        <div class="section-title">일별 기준가격 (전일 종가 기준)</div>
+        <table class="perf-table" style="margin-bottom:10px;">
+          <thead>
+            <tr><th>날짜</th><th>NAV (원)</th><th>시장가 (원)</th><th>거래량 (주)</th></tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.23</td>
+              <td style="font-weight:700;">38,635</td>
+              <td>38,830</td>
+              <td style="font-size:10px;color:var(--gray-text);">1,693,461</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.22</td>
+              <td style="font-weight:700;">42,432</td>
+              <td>42,370</td>
+              <td style="font-size:10px;color:var(--gray-text);">697,965</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.19</td>
+              <td style="font-weight:700;">41,953</td>
+              <td>41,945</td>
+              <td style="font-size:10px;color:var(--gray-text);">3,226,625</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.18</td>
+              <td style="font-weight:700;">41,983</td>
+              <td>41,890</td>
+              <td style="font-size:10px;color:var(--gray-text);">2,227,729</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.17</td>
+              <td style="font-weight:700;">41,355</td>
+              <td>41,235</td>
+              <td style="font-size:10px;color:var(--gray-text);">1,022,142</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.16</td>
+              <td style="font-weight:700;">40,908</td>
+              <td>40,840</td>
+              <td style="font-size:10px;color:var(--gray-text);">1,205,362</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.15</td>
+              <td style="font-weight:700;">40,035</td>
+              <td>40,010</td>
+              <td style="font-size:10px;color:var(--gray-text);">1,073,742</td>
+            </tr>
+            
+            <tr>
+              <td style="font-size:10px;color:var(--text-sub);">2026.06.12</td>
+              <td style="font-weight:700;">38,230</td>
+              <td>38,290</td>
+              <td style="font-size:10px;color:var(--gray-text);">2,455,162</td>
+            </tr>
+            
+          </tbody>
+        </table>
+
+        <!-- 전망 & 리스크 (나란히, 간격 없음) -->
+        <div class="section-title">전망 및 주요 리스크</div>
+        <div style="display:flex;gap:8px;">
+          <div class="outlook-box pos" style="flex:1;margin-bottom:0;">
+            <div class="outlook-title pos">▲ 긍정적 전망</div>
+            <ul class="outlook-list">
+              
+              <li>정부 기업 밸류업 프로그램 공식화 - PBR.ROE 개선 기업 수급 우위</li>
+              
+              <li>국내 기업 자사주 매입.소각 및 배당 확대 트렌드 강화</li>
+              
+              <li>일본 밸류업 사례 - 코리아 디스카운트 해소 시 대형 리레이팅 기대</li>
+              
+            </ul>
+          </div>
+          <div class="outlook-box neg" style="flex:1;margin-bottom:0;">
+            <div class="outlook-title neg">▲ 주요 리스크</div>
+            <ul class="outlook-list">
+              
+              <li>밸류업 지수 구성 기업의 단기 주가 과열 가능성</li>
+              
+              <li>기업 밸류업 정책 실효성 의문 시 테마 모멘텀 약화</li>
+              
+            </ul>
+          </div>
+        </div>
+
+        <!-- 투자 POINT -->
+        <div class="section-title" style="margin-top:10px;">투자 POINT</div>
+        
+        
+        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--blue-light);border-radius:6px;padding:9px 11px;margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:900;color:var(--blue-mid);flex-shrink:0;width:18px;">01</div>
+          <div style="font-size:10px;color:var(--text-sub);line-height:1.55;">코리아 디스카운트 해소의 최대 수혜 - ROE.주주환원 우수 기업 집중 편입</div>
+        </div>
+        
+        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--blue-light);border-radius:6px;padding:9px 11px;margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:900;color:var(--blue-mid);flex-shrink:0;width:18px;">02</div>
+          <div style="font-size:10px;color:var(--text-sub);line-height:1.55;">일본 밸류업 사례 재현 시 30%+ 지수 상승 잠재력 - 가장 직접적인 수혜 ETF</div>
+        </div>
+        
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-disc">
+      ※ 이 상품은 예금자보호법에 따라 보호되지 않으며 투자원금 손실(0~100%)이 발생할 수 있습니다. 투자 전 (간이)투자설명서를 반드시 읽어보시기 바랍니다.
+      &nbsp;|&nbsp; 기초지수: 코리아밸류업 지수
+      &nbsp;|&nbsp; 수탁: 하나은행
+    </div>
+    <div class="footer-logo">RISE ETF · KB자산운용</div>
+  </div>
+</div>
+
+
+<script>
+/* ── 데이터 주입 (Jinja2 → JS) ── */
+var NAV_RAW, BM_RAW, BM_NAME, S_LABELS, S_WEIGHTS, S_COLORS;
+try {
+  NAV_RAW  = [{"date": "2024.11.18", "nav": 9439.81, "price": null, "volume": null}, {"date": "2024.11.19", "nav": 9416.04, "price": 9410, "volume": null}, {"date": "2024.11.20", "nav": 9468.05, "price": 9460, "volume": null}, {"date": "2024.11.21", "nav": 9418.03, "price": 9415, "volume": null}, {"date": "2024.11.22", "nav": 9530.62, "price": 9530, "volume": null}, {"date": "2024.11.23", "nav": 9530.6, "price": null, "volume": null}, {"date": "2024.11.24", "nav": 9530.59, "price": null, "volume": null}, {"date": "2024.11.25", "nav": 9586.27, "price": 9585, "volume": null}, {"date": "2024.11.26", "nav": 9539.1, "price": 9520, "volume": null}, {"date": "2024.11.27", "nav": 9467.75, "price": 9460, "volume": null}, {"date": "2024.11.28", "nav": 9439.83, "price": 9425, "volume": null}, {"date": "2024.11.29", "nav": 9351.35, "price": 9335, "volume": null}, {"date": "2024.11.30", "nav": 9351.33, "price": null, "volume": null}, {"date": "2024.12.01", "nav": 9351.33, "price": null, "volume": null}, {"date": "2024.12.02", "nav": 9395.7, "price": 9405, "volume": null}, {"date": "2024.12.03", "nav": 9654.41, "price": 9615, "volume": null}, {"date": "2024.12.04", "nav": 9557.0, "price": 9540, "volume": null}, {"date": "2024.12.05", "nav": 9519.95, "price": 9510, "volume": null}, {"date": "2024.12.06", "nav": 9392.11, "price": 9400, "volume": null}, {"date": "2024.12.07", "nav": 9392.1, "price": null, "volume": null}, {"date": "2024.12.08", "nav": 9392.08, "price": null, "volume": null}, {"date": "2024.12.09", "nav": 9127.97, "price": 9140, "volume": null}, {"date": "2024.12.10", "nav": 9318.21, "price": 9325, "volume": null}, {"date": "2024.12.11", "nav": 9381.02, "price": 9390, "volume": null}, {"date": "2024.12.12", "nav": 9499.55, "price": 9450, "volume": null}, {"date": "2024.12.13", "nav": 9541.96, "price": 9530, "volume": null}, {"date": "2024.12.14", "nav": 9541.95, "price": null, "volume": null}, {"date": "2024.12.15", "nav": 9541.93, "price": null, "volume": null}, {"date": "2024.12.16", "nav": 9506.07, "price": 9485, "volume": null}, {"date": "2024.12.17", "nav": 9449.85, "price": 9450, "volume": null}, {"date": "2024.12.18", "nav": 9601.83, "price": 9590, "volume": null}, {"date": "2024.12.19", "nav": 9398.08, "price": 9400, "volume": null}, {"date": "2024.12.20", "nav": 9256.79, "price": 9235, "volume": null}, {"date": "2024.12.21", "nav": 9256.77, "price": null, "volume": null}, {"date": "2024.12.22", "nav": 9256.76, "price": null, "volume": null}, {"date": "2024.12.23", "nav": 9410.15, "price": 9405, "volume": null}, {"date": "2024.12.24", "nav": 9434.8, "price": 9420, "volume": null}, {"date": "2024.12.25", "nav": 9434.78, "price": null, "volume": null}, {"date": "2024.12.26", "nav": 9406.38, "price": 9385, "volume": null}, {"date": "2024.12.27", "nav": 9361.9, "price": 9370, "volume": null}, {"date": "2024.12.28", "nav": 9361.88, "price": null, "volume": null}, {"date": "2024.12.29", "nav": 9361.86, "price": null, "volume": null}, {"date": "2024.12.30", "nav": 9324.06, "price": 9355, "volume": null}, {"date": "2024.12.31", "nav": 9324.06, "price": null, "volume": null}, {"date": "2025.01.01", "nav": 9324.06, "price": null, "volume": null}, {"date": "2025.01.02", "nav": 9355.19, "price": 9360, "volume": null}, {"date": "2025.01.03", "nav": 9512.12, "price": 9470, "volume": null}, {"date": "2025.01.04", "nav": 9512.12, "price": null, "volume": null}, {"date": "2025.01.05", "nav": 9512.12, "price": null, "volume": null}, {"date": "2025.01.06", "nav": 9732.6, "price": 9690, "volume": null}, {"date": "2025.01.07", "nav": 9688.67, "price": 9705, "volume": null}, {"date": "2025.01.08", "nav": 9759.55, "price": 9760, "volume": null}, {"date": "2025.01.09", "nav": 9871.58, "price": 9855, "volume": null}, {"date": "2025.01.10", "nav": 9860.42, "price": 9865, "volume": null}, {"date": "2025.01.11", "nav": 9860.42, "price": null, "volume": null}, {"date": "2025.01.12", "nav": 9860.41, "price": null, "volume": null}, {"date": "2025.01.13", "nav": 9729.98, "price": 9740, "volume": null}, {"date": "2025.01.14", "nav": 9736.41, "price": 9745, "volume": null}, {"date": "2025.01.15", "nav": 9748.18, "price": 9740, "volume": null}, {"date": "2025.01.16", "nav": 9886.98, "price": 9870, "volume": null}, {"date": "2025.01.17", "nav": 9866.14, "price": 9840, "volume": null}, {"date": "2025.01.18", "nav": 9866.14, "price": null, "volume": null}, {"date": "2025.01.19", "nav": 9866.13, "price": null, "volume": null}, {"date": "2025.01.20", "nav": 9778.74, "price": 9775, "volume": null}, {"date": "2025.01.21", "nav": 9844.72, "price": 9850, "volume": null}, {"date": "2025.01.22", "nav": 9978.38, "price": 9985, "volume": null}, {"date": "2025.01.23", "nav": 9876.18, "price": 9895, "volume": null}, {"date": "2025.01.24", "nav": 9963.4, "price": 9930, "volume": null}, {"date": "2025.01.25", "nav": 9963.4, "price": null, "volume": null}, {"date": "2025.01.26", "nav": 9963.4, "price": null, "volume": null}, {"date": "2025.01.27", "nav": 9963.39, "price": null, "volume": null}, {"date": "2025.01.28", "nav": 9963.39, "price": null, "volume": null}, {"date": "2025.01.29", "nav": 9963.39, "price": null, "volume": null}, {"date": "2025.01.30", "nav": 9963.38, "price": null, "volume": null}, {"date": "2025.01.31", "nav": 9805.46, "price": 9805, "volume": null}, {"date": "2025.02.01", "nav": 9805.46, "price": null, "volume": null}, {"date": "2025.02.02", "nav": 9805.46, "price": null, "volume": null}, {"date": "2025.02.03", "nav": 9530.25, "price": 9535, "volume": null}, {"date": "2025.02.04", "nav": 9633.26, "price": 9645, "volume": null}, {"date": "2025.02.05", "nav": 9725.81, "price": 9685, "volume": null}, {"date": "2025.02.06", "nav": 9799.14, "price": 9740, "volume": null}, {"date": "2025.02.07", "nav": 9730.26, "price": 9715, "volume": null}, {"date": "2025.02.08", "nav": 9730.26, "price": null, "volume": null}, {"date": "2025.02.09", "nav": 9730.26, "price": null, "volume": null}, {"date": "2025.02.10", "nav": 9716.17, "price": 9700, "volume": null}, {"date": "2025.02.11", "nav": 9804.19, "price": 9795, "volume": null}, {"date": "2025.02.12", "nav": 9780.94, "price": 9790, "volume": null}, {"date": "2025.02.13", "nav": 9879.19, "price": 9850, "volume": null}, {"date": "2025.02.14", "nav": 9971.78, "price": 9925, "volume": null}, {"date": "2025.02.15", "nav": 9971.78, "price": null, "volume": null}, {"date": "2025.02.16", "nav": 9971.77, "price": null, "volume": null}, {"date": "2025.02.17", "nav": 10032.14, "price": 10020, "volume": null}, {"date": "2025.02.18", "nav": 10095.05, "price": 10085, "volume": null}, {"date": "2025.02.19", "nav": 10272.97, "price": 10235, "volume": null}, {"date": "2025.02.20", "nav": 10223.01, "price": 10180, "volume": null}, {"date": "2025.02.21", "nav": 10199.91, "price": 10205, "volume": null}, {"date": "2025.02.22", "nav": 10199.9, "price": null, "volume": null}, {"date": "2025.02.23", "nav": 10199.9, "price": null, "volume": null}, {"date": "2025.02.24", "nav": 10139.12, "price": 10100, "volume": null}, {"date": "2025.02.25", "nav": 10041.21, "price": 10060, "volume": null}, {"date": "2025.02.26", "nav": 10123.8, "price": 10125, "volume": null}, {"date": "2025.02.27", "nav": 10083.0, "price": 10070, "volume": null}, {"date": "2025.02.28", "nav": 9751.53, "price": 9755, "volume": null}, {"date": "2025.03.01", "nav": 9751.53, "price": null, "volume": null}, {"date": "2025.03.02", "nav": 9751.52, "price": null, "volume": null}, {"date": "2025.03.03", "nav": 9751.52, "price": null, "volume": null}, {"date": "2025.03.04", "nav": 9774.96, "price": 9750, "volume": null}, {"date": "2025.03.05", "nav": 9857.92, "price": 9835, "volume": null}, {"date": "2025.03.06", "nav": 9955.13, "price": 9915, "volume": null}, {"date": "2025.03.07", "nav": 9888.6, "price": 9855, "volume": null}, {"date": "2025.03.08", "nav": 9888.59, "price": null, "volume": null}, {"date": "2025.03.09", "nav": 9888.59, "price": null, "volume": null}, {"date": "2025.03.10", "nav": 9904.18, "price": 9915, "volume": null}, {"date": "2025.03.11", "nav": 9816.17, "price": 9805, "volume": null}, {"date": "2025.03.12", "nav": 10005.08, "price": 10010, "volume": null}, {"date": "2025.03.13", "nav": 10040.5, "price": 9945, "volume": null}, {"date": "2025.03.14", "nav": 10055.14, "price": 10050, "volume": null}, {"date": "2025.03.15", "nav": 10055.13, "price": null, "volume": null}, {"date": "2025.03.16", "nav": 10055.13, "price": null, "volume": null}, {"date": "2025.03.17", "nav": 10256.05, "price": 10215, "volume": null}, {"date": "2025.03.18", "nav": 10258.31, "price": 10265, "volume": null}, {"date": "2025.03.19", "nav": 10343.66, "price": 10355, "volume": null}, {"date": "2025.03.20", "nav": 10404.29, "price": 10425, "volume": null}, {"date": "2025.03.21", "nav": 10426.08, "price": 10435, "volume": null}, {"date": "2025.03.22", "nav": 10426.08, "price": null, "volume": null}, {"date": "2025.03.23", "nav": 10426.07, "price": null, "volume": null}, {"date": "2025.03.24", "nav": 10435.58, "price": 10440, "volume": null}, {"date": "2025.03.25", "nav": 10402.18, "price": 10395, "volume": null}, {"date": "2025.03.26", "nav": 10500.42, "price": 10520, "volume": null}, {"date": "2025.03.27", "nav": 10340.41, "price": 10360, "volume": null}, {"date": "2025.03.28", "nav": 10114.5, "price": 10120, "volume": null}, {"date": "2025.03.29", "nav": 10114.49, "price": null, "volume": null}, {"date": "2025.03.30", "nav": 10114.48, "price": null, "volume": null}, {"date": "2025.03.31", "nav": 9845.72, "price": 9830, "volume": null}, {"date": "2025.04.01", "nav": 10030.43, "price": 10060, "volume": null}, {"date": "2025.04.02", "nav": 9989.14, "price": 9970, "volume": null}, {"date": "2025.04.03", "nav": 9879.76, "price": 9885, "volume": null}, {"date": "2025.04.04", "nav": 9715.87, "price": 9675, "volume": null}, {"date": "2025.04.05", "nav": 9715.86, "price": null, "volume": null}, {"date": "2025.04.06", "nav": 9715.85, "price": null, "volume": null}, {"date": "2025.04.07", "nav": 9130.39, "price": 9145, "volume": null}, {"date": "2025.04.08", "nav": 9160.67, "price": 9175, "volume": null}, {"date": "2025.04.09", "nav": 9001.5, "price": 9030, "volume": null}, {"date": "2025.04.10", "nav": 9606.47, "price": 9545, "volume": null}, {"date": "2025.04.11", "nav": 9494.23, "price": 9480, "volume": null}, {"date": "2025.04.12", "nav": 9494.23, "price": null, "volume": null}, {"date": "2025.04.13", "nav": 9474.22, "price": null, "volume": null}, {"date": "2025.04.14", "nav": 9549.57, "price": 9520, "volume": null}, {"date": "2025.04.15", "nav": 9642.43, "price": 9650, "volume": null}, {"date": "2025.04.16", "nav": 9541.82, "price": 9495, "volume": null}, {"date": "2025.04.17", "nav": 9603.86, "price": 9565, "volume": null}, {"date": "2025.04.18", "nav": 9686.28, "price": 9690, "volume": null}, {"date": "2025.04.19", "nav": 9686.28, "price": null, "volume": null}, {"date": "2025.04.20", "nav": 9686.28, "price": null, "volume": null}, {"date": "2025.04.21", "nav": 9744.34, "price": 9710, "volume": null}, {"date": "2025.04.22", "nav": 9702.41, "price": 9695, "volume": null}, {"date": "2025.04.23", "nav": 9868.44, "price": 9855, "volume": null}, {"date": "2025.04.24", "nav": 9833.14, "price": 9805, "volume": null}, {"date": "2025.04.25", "nav": 9921.74, "price": 9920, "volume": null}, {"date": "2025.04.26", "nav": 9921.74, "price": null, "volume": null}, {"date": "2025.04.27", "nav": 9921.74, "price": null, "volume": null}, {"date": "2025.04.28", "nav": 9889.89, "price": 9850, "volume": null}, {"date": "2025.04.29", "nav": 9981.12, "price": 9970, "volume": null}, {"date": "2025.04.30", "nav": 10002.81, "price": 9935, "volume": null}, {"date": "2025.05.01", "nav": 10002.81, "price": null, "volume": null}, {"date": "2025.05.02", "nav": 10078.44, "price": 10080, "volume": null}, {"date": "2025.05.03", "nav": 10078.44, "price": null, "volume": null}, {"date": "2025.05.04", "nav": 10078.44, "price": null, "volume": null}, {"date": "2025.05.05", "nav": 10078.44, "price": null, "volume": null}, {"date": "2025.05.06", "nav": 10078.44, "price": null, "volume": null}, {"date": "2025.05.07", "nav": 10165.17, "price": 10155, "volume": null}, {"date": "2025.05.08", "nav": 10178.6, "price": 10185, "volume": null}, {"date": "2025.05.09", "nav": 10186.35, "price": 10180, "volume": null}, {"date": "2025.05.10", "nav": 10186.35, "price": null, "volume": null}, {"date": "2025.05.11", "nav": 10186.35, "price": null, "volume": null}, {"date": "2025.05.12", "nav": 10326.08, "price": 10295, "volume": null}, {"date": "2025.05.13", "nav": 10367.64, "price": 10360, "volume": null}, {"date": "2025.05.14", "nav": 10523.64, "price": 10510, "volume": null}, {"date": "2025.05.15", "nav": 10422.01, "price": 10390, "volume": null}, {"date": "2025.05.16", "nav": 10501.69, "price": 10485, "volume": null}, {"date": "2025.05.17", "nav": 10501.69, "price": null, "volume": null}, {"date": "2025.05.18", "nav": 10501.69, "price": null, "volume": null}, {"date": "2025.05.19", "nav": 10374.51, "price": 10380, "volume": null}, {"date": "2025.05.20", "nav": 10411.13, "price": 10405, "volume": null}, {"date": "2025.05.21", "nav": 10431.33, "price": 10430, "volume": null}, {"date": "2025.05.22", "nav": 10299.21, "price": 10280, "volume": null}, {"date": "2025.05.23", "nav": 10343.12, "price": 10320, "volume": null}, {"date": "2025.05.24", "nav": 10343.12, "price": null, "volume": null}, {"date": "2025.05.25", "nav": 10343.12, "price": null, "volume": null}, {"date": "2025.05.26", "nav": 10516.9, "price": 10475, "volume": null}, {"date": "2025.05.27", "nav": 10517.64, "price": 10485, "volume": null}, {"date": "2025.05.28", "nav": 10598.62, "price": 10580, "volume": null}, {"date": "2025.05.29", "nav": 10812.24, "price": 10795, "volume": null}, {"date": "2025.05.30", "nav": 10659.33, "price": 10640, "volume": null}, {"date": "2025.05.31", "nav": 10659.33, "price": null, "volume": null}, {"date": "2025.06.01", "nav": 10659.33, "price": null, "volume": null}, {"date": "2025.06.02", "nav": 10631.98, "price": 10620, "volume": null}, {"date": "2025.06.03", "nav": 10631.98, "price": null, "volume": null}, {"date": "2025.06.04", "nav": 10998.4, "price": 11020, "volume": null}, {"date": "2025.06.05", "nav": 11169.38, "price": 11215, "volume": null}, {"date": "2025.06.06", "nav": 11169.37, "price": null, "volume": null}, {"date": "2025.06.07", "nav": 11169.37, "price": null, "volume": null}, {"date": "2025.06.08", "nav": 11169.37, "price": null, "volume": null}, {"date": "2025.06.09", "nav": 11366.48, "price": 11350, "volume": null}, {"date": "2025.06.10", "nav": 11440.08, "price": 11455, "volume": null}, {"date": "2025.06.11", "nav": 11556.73, "price": 11575, "volume": null}, {"date": "2025.06.12", "nav": 11572.94, "price": 11580, "volume": null}, {"date": "2025.06.13", "nav": 11505.3, "price": 11535, "volume": null}, {"date": "2025.06.14", "nav": 11505.29, "price": null, "volume": null}, {"date": "2025.06.15", "nav": 11505.29, "price": null, "volume": null}, {"date": "2025.06.16", "nav": 11760.31, "price": 11785, "volume": null}, {"date": "2025.06.17", "nav": 11794.95, "price": 11800, "volume": null}, {"date": "2025.06.18", "nav": 11810.39, "price": 11785, "volume": null}, {"date": "2025.06.19", "nav": 11828.33, "price": 11795, "volume": null}, {"date": "2025.06.20", "nav": 11965.06, "price": 11970, "volume": null}, {"date": "2025.06.21", "nav": 11965.05, "price": null, "volume": null}, {"date": "2025.06.22", "nav": 11965.05, "price": null, "volume": null}, {"date": "2025.06.23", "nav": 11909.77, "price": 11900, "volume": null}, {"date": "2025.06.24", "nav": 12243.05, "price": 12205, "volume": null}, {"date": "2025.06.25", "nav": 12329.56, "price": 12325, "volume": 639006}, {"date": "2025.06.26", "nav": 12318.05, "price": 12340, "volume": 501288}, {"date": "2025.06.27", "nav": 12244.9, "price": 12265, "volume": 557964}, {"date": "2025.06.28", "nav": 12244.89, "price": null, "volume": null}, {"date": "2025.06.29", "nav": 12244.9, "price": null, "volume": null}, {"date": "2025.06.30", "nav": 12293.65, "price": 12300, "volume": 465210}, {"date": "2025.07.01", "nav": 12319.25, "price": 12300, "volume": 631112}, {"date": "2025.07.02", "nav": 12279.56, "price": 12265, "volume": 786034}, {"date": "2025.07.03", "nav": 12396.34, "price": 12400, "volume": 454048}, {"date": "2025.07.04", "nav": 12102.35, "price": 12100, "volume": 516778}, {"date": "2025.07.05", "nav": 12102.35, "price": null, "volume": null}, {"date": "2025.07.06", "nav": 12102.35, "price": null, "volume": null}, {"date": "2025.07.07", "nav": 12160.88, "price": 12200, "volume": 304645}, {"date": "2025.07.08", "nav": 12515.97, "price": 12475, "volume": 410499}, {"date": "2025.07.09", "nav": 12560.9, "price": 12585, "volume": 645295}, {"date": "2025.07.10", "nav": 12724.78, "price": 12690, "volume": 672111}, {"date": "2025.07.11", "nav": 12705.25, "price": 12705, "volume": 1197689}, {"date": "2025.07.12", "nav": 12705.24, "price": null, "volume": null}, {"date": "2025.07.13", "nav": 12665.25, "price": null, "volume": null}, {"date": "2025.07.14", "nav": 12882.26, "price": 12860, "volume": 349834}, {"date": "2025.07.15", "nav": 12926.17, "price": 12905, "volume": 588053}, {"date": "2025.07.16", "nav": 12763.35, "price": 12765, "volume": 840316}, {"date": "2025.07.17", "nav": 12694.94, "price": 12720, "volume": 718523}, {"date": "2025.07.18", "nav": 12633.28, "price": 12640, "volume": 551467}, {"date": "2025.07.19", "nav": 12633.27, "price": null, "volume": null}, {"date": "2025.07.20", "nav": 12633.27, "price": null, "volume": null}, {"date": "2025.07.21", "nav": 12698.5, "price": 12700, "volume": 592414}, {"date": "2025.07.22", "nav": 12530.78, "price": 12565, "volume": 417590}, {"date": "2025.07.23", "nav": 12633.37, "price": 12590, "volume": 312540}, {"date": "2025.07.24", "nav": 12624.72, "price": 12660, "volume": 295296}, {"date": "2025.07.25", "nav": 12643.23, "price": 12605, "volume": 360884}, {"date": "2025.07.26", "nav": 12643.22, "price": null, "volume": null}, {"date": "2025.07.27", "nav": 12643.22, "price": null, "volume": null}, {"date": "2025.07.28", "nav": 12589.94, "price": 12535, "volume": 460003}, {"date": "2025.07.29", "nav": 12700.0, "price": 12660, "volume": 228808}, {"date": "2025.07.30", "nav": 12774.84, "price": 12745, "volume": 808516}, {"date": "2025.07.31", "nav": 12751.42, "price": 12705, "volume": 222846}, {"date": "2025.08.01", "nav": 12235.96, "price": 12280, "volume": 239806}, {"date": "2025.08.02", "nav": 12235.95, "price": null, "volume": null}, {"date": "2025.08.03", "nav": 12235.96, "price": null, "volume": null}, {"date": "2025.08.04", "nav": 12347.35, "price": 12295, "volume": 190915}, {"date": "2025.08.05", "nav": 12536.44, "price": 12530, "volume": 217147}, {"date": "2025.08.06", "nav": 12526.53, "price": 12565, "volume": 86992}, {"date": "2025.08.07", "nav": 12622.51, "price": 12585, "volume": 77553}, {"date": "2025.08.08", "nav": 12532.85, "price": 12540, "volume": 74880}, {"date": "2025.08.09", "nav": 12532.84, "price": null, "volume": null}, {"date": "2025.08.10", "nav": 12532.85, "price": null, "volume": null}, {"date": "2025.08.11", "nav": 12554.14, "price": 12545, "volume": 63772}, {"date": "2025.08.12", "nav": 12524.72, "price": 12550, "volume": 70842}, {"date": "2025.08.13", "nav": 12668.89, "price": 12630, "volume": 112729}, {"date": "2025.08.14", "nav": 12665.2, "price": 12635, "volume": 216200}, {"date": "2025.08.15", "nav": 12665.19, "price": null, "volume": null}, {"date": "2025.08.16", "nav": 12665.19, "price": null, "volume": null}, {"date": "2025.08.17", "nav": 12665.19, "price": null, "volume": null}, {"date": "2025.08.18", "nav": 12412.53, "price": 12435, "volume": 110097}, {"date": "2025.08.19", "nav": 12341.49, "price": 12330, "volume": 64534}, {"date": "2025.08.20", "nav": 12252.9, "price": 12240, "volume": 71096}, {"date": "2025.08.21", "nav": 12225.27, "price": 12265, "volume": 59356}, {"date": "2025.08.22", "nav": 12374.48, "price": 12410, "volume": 30755}, {"date": "2025.08.23", "nav": 12374.48, "price": null, "volume": null}, {"date": "2025.08.24", "nav": 12374.48, "price": null, "volume": null}, {"date": "2025.08.25", "nav": 12521.27, "price": 12465, "volume": 316370}, {"date": "2025.08.26", "nav": 12446.72, "price": 12490, "volume": 44728}, {"date": "2025.08.27", "nav": 12446.02, "price": 12460, "volume": 44293}, {"date": "2025.08.28", "nav": 12544.76, "price": 12585, "volume": 52534}, {"date": "2025.08.29", "nav": 12528.77, "price": 12555, "volume": 94409}, {"date": "2025.08.30", "nav": 12528.77, "price": null, "volume": null}, {"date": "2025.08.31", "nav": 12528.76, "price": null, "volume": null}, {"date": "2025.09.01", "nav": 12347.22, "price": 12385, "volume": 49147}, {"date": "2025.09.02", "nav": 12481.03, "price": 12500, "volume": 14449}, {"date": "2025.09.03", "nav": 12549.93, "price": 12550, "volume": 46884}, {"date": "2025.09.04", "nav": 12549.04, "price": 12505, "volume": 51198}, {"date": "2025.09.05", "nav": 12606.95, "price": 12610, "volume": 42419}, {"date": "2025.09.06", "nav": 12606.95, "price": null, "volume": null}, {"date": "2025.09.07", "nav": 12606.95, "price": null, "volume": null}, {"date": "2025.09.08", "nav": 12665.05, "price": 12635, "volume": 123268}, {"date": "2025.09.09", "nav": 12852.76, "price": 12800, "volume": 149519}, {"date": "2025.09.10", "nav": 13210.95, "price": 13200, "volume": 2445680}, {"date": "2025.09.11", "nav": 13309.86, "price": 13250, "volume": 1520158}, {"date": "2025.09.12", "nav": 13575.99, "price": 13535, "volume": 1918605}, {"date": "2025.09.13", "nav": 13575.99, "price": null, "volume": null}, {"date": "2025.09.14", "nav": 13576.0, "price": null, "volume": null}, {"date": "2025.09.15", "nav": 13624.21, "price": 13620, "volume": 1228242}, {"date": "2025.09.16", "nav": 13882.22, "price": 13870, "volume": 700846}, {"date": "2025.09.17", "nav": 13690.27, "price": 13670, "volume": 586989}, {"date": "2025.09.18", "nav": 13932.45, "price": 13940, "volume": 716659}, {"date": "2025.09.19", "nav": 13904.01, "price": 13905, "volume": 669062}, {"date": "2025.09.20", "nav": 13904.0, "price": null, "volume": null}, {"date": "2025.09.21", "nav": 13904.0, "price": null, "volume": null}, {"date": "2025.09.22", "nav": 13968.49, "price": 13980, "volume": 521904}, {"date": "2025.09.23", "nav": 14042.55, "price": 14075, "volume": 351900}, {"date": "2025.09.24", "nav": 14030.83, "price": 14000, "volume": 308447}, {"date": "2025.09.25", "nav": 13961.47, "price": 13930, "volume": 262330}, {"date": "2025.09.26", "nav": 13614.32, "price": 13615, "volume": 455713}, {"date": "2025.09.27", "nav": 13614.32, "price": null, "volume": null}, {"date": "2025.09.28", "nav": 13614.31, "price": null, "volume": null}, {"date": "2025.09.29", "nav": 13856.22, "price": 13895, "volume": 240443}, {"date": "2025.09.30", "nav": 13833.32, "price": 13875, "volume": 233906}, {"date": "2025.10.01", "nav": 13989.19, "price": 13990, "volume": 189605}, {"date": "2025.10.02", "nav": 14426.42, "price": 14580, "volume": 1993551}, {"date": "2025.10.03", "nav": 14426.41, "price": null, "volume": null}, {"date": "2025.10.04", "nav": 14426.41, "price": null, "volume": null}, {"date": "2025.10.05", "nav": 14426.41, "price": null, "volume": null}, {"date": "2025.10.06", "nav": 14426.4, "price": null, "volume": null}, {"date": "2025.10.07", "nav": 14426.4, "price": null, "volume": null}, {"date": "2025.10.08", "nav": 14426.4, "price": null, "volume": null}, {"date": "2025.10.09", "nav": 14426.39, "price": null, "volume": null}, {"date": "2025.10.10", "nav": 14723.7, "price": 14765, "volume": 1406306}, {"date": "2025.10.11", "nav": 14723.69, "price": null, "volume": null}, {"date": "2025.10.12", "nav": 14723.69, "price": null, "volume": null}, {"date": "2025.10.13", "nav": 14465.91, "price": 14495, "volume": 386525}, {"date": "2025.10.14", "nav": 14287.25, "price": 14235, "volume": 484819}, {"date": "2025.10.15", "nav": 14668.76, "price": 14705, "volume": 627251}, {"date": "2025.10.16", "nav": 15085.93, "price": 15100, "volume": 1140640}, {"date": "2025.10.17", "nav": 15105.14, "price": 15090, "volume": 923314}, {"date": "2025.10.18", "nav": 15105.13, "price": null, "volume": null}, {"date": "2025.10.19", "nav": 15105.13, "price": null, "volume": null}, {"date": "2025.10.20", "nav": 15514.44, "price": 15495, "volume": 789020}, {"date": "2025.10.21", "nav": 15456.05, "price": 15455, "volume": 1436872}, {"date": "2025.10.22", "nav": 15625.72, "price": 15645, "volume": 881698}, {"date": "2025.10.23", "nav": 15532.35, "price": 15580, "volume": 852489}, {"date": "2025.10.24", "nav": 15848.43, "price": 15810, "volume": 1082016}, {"date": "2025.10.25", "nav": 15848.42, "price": null, "volume": null}, {"date": "2025.10.26", "nav": 15848.42, "price": null, "volume": null}, {"date": "2025.10.27", "nav": 16272.74, "price": 16285, "volume": 1857368}, {"date": "2025.10.28", "nav": 16042.27, "price": 16065, "volume": 637849}, {"date": "2025.10.29", "nav": 16368.7, "price": 16415, "volume": 662437}, {"date": "2025.10.30", "nav": 16583.06, "price": 16625, "volume": 2399927}, {"date": "2025.10.31", "nav": 16669.11, "price": 16680, "volume": 1074250}, {"date": "2025.11.01", "nav": 16669.1, "price": null, "volume": null}, {"date": "2025.11.02", "nav": 16669.1, "price": null, "volume": null}, {"date": "2025.11.03", "nav": 17373.27, "price": 17335, "volume": 1846348}, {"date": "2025.11.04", "nav": 16870.15, "price": 16860, "volume": 1635579}, {"date": "2025.11.05", "nav": 16454.59, "price": 16380, "volume": 1266727}, {"date": "2025.11.06", "nav": 16701.26, "price": 16710, "volume": 1670997}, {"date": "2025.11.07", "nav": 16319.26, "price": 16370, "volume": 1483793}, {"date": "2025.11.08", "nav": 16319.25, "price": null, "volume": null}, {"date": "2025.11.09", "nav": 16319.25, "price": null, "volume": null}, {"date": "2025.11.10", "nav": 16896.92, "price": 16915, "volume": 854100}, {"date": "2025.11.11", "nav": 17016.19, "price": 17020, "volume": 1801172}, {"date": "2025.11.12", "nav": 17141.76, "price": 17225, "volume": 808195}, {"date": "2025.11.13", "nav": 17109.54, "price": 17125, "volume": 767211}, {"date": "2025.11.14", "nav": 16383.5, "price": 16420, "volume": 1227254}, {"date": "2025.11.15", "nav": 16383.5, "price": null, "volume": null}, {"date": "2025.11.16", "nav": 16383.49, "price": null, "volume": null}, {"date": "2025.11.17", "nav": 16812.68, "price": 16850, "volume": 839240}, {"date": "2025.11.18", "nav": 16166.96, "price": 16220, "volume": 722403}, {"date": "2025.11.19", "nav": 16075.15, "price": 16120, "volume": 624936}, {"date": "2025.11.20", "nav": 16303.08, "price": 16355, "volume": 371397}, {"date": "2025.11.21", "nav": 15596.45, "price": 15645, "volume": 477381}, {"date": "2025.11.22", "nav": 15596.45, "price": null, "volume": null}, {"date": "2025.11.23", "nav": 15596.44, "price": null, "volume": null}, {"date": "2025.11.24", "nav": 15569.18, "price": 15600, "volume": 333631}, {"date": "2025.11.25", "nav": 15662.45, "price": 15595, "volume": 258683}, {"date": "2025.11.26", "nav": 15980.74, "price": 15940, "volume": 192810}, {"date": "2025.11.27", "nav": 16161.27, "price": 16130, "volume": 272794}, {"date": "2025.11.28", "nav": 15965.42, "price": 15975, "volume": 298522}, {"date": "2025.11.29", "nav": 15965.42, "price": null, "volume": null}, {"date": "2025.11.30", "nav": 15965.41, "price": null, "volume": null}, {"date": "2025.12.01", "nav": 15972.61, "price": 15975, "volume": 224629}, {"date": "2025.12.02", "nav": 16400.17, "price": 16435, "volume": 172636}, {"date": "2025.12.03", "nav": 16472.51, "price": 16520, "volume": 308914}, {"date": "2025.12.04", "nav": 16418.96, "price": 16400, "volume": 270887}, {"date": "2025.12.05", "nav": 16771.45, "price": 16815, "volume": 350098}, {"date": "2025.12.06", "nav": 16771.44, "price": null, "volume": null}, {"date": "2025.12.07", "nav": 16771.43, "price": null, "volume": null}, {"date": "2025.12.08", "nav": 17045.4, "price": 16965, "volume": 959751}, {"date": "2025.12.09", "nav": 16893.47, "price": 16900, "volume": 301358}, {"date": "2025.12.10", "nav": 16944.34, "price": 16940, "volume": 488384}, {"date": "2025.12.11", "nav": 16756.39, "price": 16790, "volume": 516082}, {"date": "2025.12.12", "nav": 16977.2, "price": 16995, "volume": 458261}, {"date": "2025.12.13", "nav": 16977.2, "price": null, "volume": null}, {"date": "2025.12.14", "nav": 16977.19, "price": null, "volume": null}, {"date": "2025.12.15", "nav": 16557.43, "price": 16570, "volume": 428991}, {"date": "2025.12.16", "nav": 16218.84, "price": 16255, "volume": 469057}, {"date": "2025.12.17", "nav": 16536.82, "price": 16565, "volume": 267372}, {"date": "2025.12.18", "nav": 16404.57, "price": 16420, "volume": 224158}, {"date": "2025.12.19", "nav": 16493.0, "price": 16525, "volume": 178647}, {"date": "2025.12.20", "nav": 16493.0, "price": null, "volume": null}, {"date": "2025.12.21", "nav": 16492.99, "price": null, "volume": null}, {"date": "2025.12.22", "nav": 16936.71, "price": 16930, "volume": 167776}, {"date": "2025.12.23", "nav": 16974.62, "price": 16990, "volume": 467706}, {"date": "2025.12.24", "nav": 16998.67, "price": 17030, "volume": 222126}, {"date": "2025.12.25", "nav": 16998.66, "price": null, "volume": null}, {"date": "2025.12.26", "nav": 17119.0, "price": 17060, "volume": 486067}, {"date": "2025.12.27", "nav": 17118.99, "price": null, "volume": null}, {"date": "2025.12.28", "nav": 17118.99, "price": null, "volume": null}, {"date": "2025.12.29", "nav": 17701.82, "price": 17625, "volume": 3533454}, {"date": "2025.12.30", "nav": 17749.11, "price": 17780, "volume": 2586090}, {"date": "2025.12.31", "nav": 17749.1, "price": null, "volume": null}, {"date": "2026.01.01", "nav": 17749.1, "price": null, "volume": null}, {"date": "2026.01.02", "nav": 18239.92, "price": 18240, "volume": 3297811}, {"date": "2026.01.03", "nav": 18239.91, "price": null, "volume": null}, {"date": "2026.01.04", "nav": 18239.91, "price": null, "volume": null}, {"date": "2026.01.05", "nav": 18830.91, "price": 18800, "volume": 2179811}, {"date": "2026.01.06", "nav": 19195.43, "price": 19170, "volume": 1476139}, {"date": "2026.01.07", "nav": 19439.12, "price": 19475, "volume": 1822241}, {"date": "2026.01.08", "nav": 19487.83, "price": 19450, "volume": 1517186}, {"date": "2026.01.09", "nav": 19652.55, "price": 19650, "volume": 1564605}, {"date": "2026.01.10", "nav": 19652.55, "price": null, "volume": null}, {"date": "2026.01.11", "nav": 19652.54, "price": null, "volume": null}, {"date": "2026.01.12", "nav": 19771.28, "price": 19765, "volume": 1479953}, {"date": "2026.01.13", "nav": 19971.61, "price": 19980, "volume": 1405780}, {"date": "2026.01.14", "nav": 20201.88, "price": 20185, "volume": 1305668}, {"date": "2026.01.15", "nav": 20479.7, "price": 20515, "volume": 1390920}, {"date": "2026.01.16", "nav": 20639.08, "price": 20640, "volume": 2473999}, {"date": "2026.01.17", "nav": 20639.08, "price": null, "volume": null}, {"date": "2026.01.18", "nav": 20639.09, "price": null, "volume": null}, {"date": "2026.01.19", "nav": 21061.82, "price": 21070, "volume": 2351558}, {"date": "2026.01.20", "nav": 20864.17, "price": 20840, "volume": 1180653}, {"date": "2026.01.21", "nav": 21167.48, "price": 21085, "volume": 1577407}, {"date": "2026.01.22", "nav": 21240.94, "price": 21250, "volume": 3076631}, {"date": "2026.01.23", "nav": 21320.07, "price": 21280, "volume": 1480909}, {"date": "2026.01.24", "nav": 21320.07, "price": null, "volume": null}, {"date": "2026.01.25", "nav": 21320.08, "price": null, "volume": null}, {"date": "2026.01.26", "nav": 21015.02, "price": 21040, "volume": 1291172}, {"date": "2026.01.27", "nav": 21868.48, "price": 21780, "volume": 1635795}, {"date": "2026.01.28", "nav": 22311.95, "price": 22350, "volume": 4325904}, {"date": "2026.01.29", "nav": 22706.54, "price": 22755, "volume": 2884544}, {"date": "2026.01.30", "nav": 22994.71, "price": 23055, "volume": 2636026}, {"date": "2026.01.31", "nav": 22994.71, "price": null, "volume": null}, {"date": "2026.02.01", "nav": 22994.71, "price": null, "volume": null}, {"date": "2026.02.02", "nav": 21702.71, "price": 21700, "volume": 3103379}, {"date": "2026.02.03", "nav": 23291.57, "price": 23260, "volume": 2565908}, {"date": "2026.02.04", "nav": 23530.57, "price": 23495, "volume": 3365429}, {"date": "2026.02.05", "nav": 22520.27, "price": 22550, "volume": 2475069}, {"date": "2026.02.06", "nav": 22346.69, "price": 22290, "volume": 2732265}, {"date": "2026.02.07", "nav": 22346.7, "price": null, "volume": null}, {"date": "2026.02.08", "nav": 22346.7, "price": null, "volume": null}, {"date": "2026.02.09", "nav": 23308.71, "price": 23225, "volume": 2580270}, {"date": "2026.02.10", "nav": 23299.47, "price": 23340, "volume": 2192022}, {"date": "2026.02.11", "nav": 23528.26, "price": 23515, "volume": 1566752}, {"date": "2026.02.12", "nav": 24289.63, "price": 24260, "volume": 4913959}, {"date": "2026.02.13", "nav": 24237.04, "price": 24290, "volume": 4380923}, {"date": "2026.02.14", "nav": 24237.04, "price": null, "volume": null}, {"date": "2026.02.15", "nav": 24237.03, "price": null, "volume": null}, {"date": "2026.02.16", "nav": 24237.03, "price": null, "volume": null}, {"date": "2026.02.17", "nav": 24237.03, "price": null, "volume": null}, {"date": "2026.02.18", "nav": 24237.03, "price": null, "volume": null}, {"date": "2026.02.19", "nav": 24852.56, "price": 24865, "volume": 3251948}, {"date": "2026.02.20", "nav": 25585.78, "price": 25575, "volume": 5064296}, {"date": "2026.02.21", "nav": 25585.78, "price": null, "volume": null}, {"date": "2026.02.22", "nav": 25585.78, "price": null, "volume": null}, {"date": "2026.02.23", "nav": 25655.58, "price": 25720, "volume": 4554949}, {"date": "2026.02.24", "nav": 26225.09, "price": 26200, "volume": 3733078}, {"date": "2026.02.25", "nav": 26705.87, "price": 26740, "volume": 5265616}, {"date": "2026.02.26", "nav": 28045.45, "price": 28100, "volume": 7006644}, {"date": "2026.02.27", "nav": 27674.88, "price": 27750, "volume": 6067931}, {"date": "2026.02.28", "nav": 27674.88, "price": null, "volume": null}, {"date": "2026.03.01", "nav": 27674.87, "price": null, "volume": null}, {"date": "2026.03.02", "nav": 27674.87, "price": null, "volume": null}, {"date": "2026.03.03", "nav": 25735.36, "price": 25785, "volume": 3449888}, {"date": "2026.03.04", "nav": 22829.38, "price": 22775, "volume": 3742596}, {"date": "2026.03.05", "nav": 25048.71, "price": 25170, "volume": 4302668}, {"date": "2026.03.06", "nav": 25000.78, "price": 24995, "volume": 2387806}, {"date": "2026.03.07", "nav": 25000.77, "price": null, "volume": null}, {"date": "2026.03.08", "nav": 25000.77, "price": null, "volume": null}, {"date": "2026.03.09", "nav": 23314.12, "price": 23355, "volume": 1694068}, {"date": "2026.03.10", "nav": 24780.17, "price": 24785, "volume": 2291107}, {"date": "2026.03.11", "nav": 25030.81, "price": 25000, "volume": 2487903}, {"date": "2026.03.12", "nav": 24807.03, "price": 24755, "volume": 1612132}, {"date": "2026.03.13", "nav": 24376.66, "price": 24400, "volume": 1256029}, {"date": "2026.03.14", "nav": 24376.66, "price": null, "volume": null}, {"date": "2026.03.15", "nav": 24376.66, "price": null, "volume": null}, {"date": "2026.03.16", "nav": 24899.73, "price": 24870, "volume": 960234}, {"date": "2026.03.17", "nav": 25159.57, "price": 25065, "volume": 1357986}, {"date": "2026.03.18", "nav": 26571.28, "price": 26575, "volume": 3583763}, {"date": "2026.03.19", "nav": 25833.68, "price": 25885, "volume": 1514929}, {"date": "2026.03.20", "nav": 25770.7, "price": 25835, "volume": 1595224}, {"date": "2026.03.21", "nav": 25770.7, "price": null, "volume": null}, {"date": "2026.03.22", "nav": 25770.69, "price": null, "volume": null}, {"date": "2026.03.23", "nav": 24119.56, "price": 24135, "volume": 2314902}, {"date": "2026.03.24", "nav": 24841.35, "price": 24880, "volume": 1874863}, {"date": "2026.03.25", "nav": 25285.51, "price": 25290, "volume": 2083785}, {"date": "2026.03.26", "nav": 24413.21, "price": 24450, "volume": 1115242}, {"date": "2026.03.27", "nav": 24312.5, "price": 24355, "volume": 1371924}, {"date": "2026.03.28", "nav": 24312.49, "price": null, "volume": null}, {"date": "2026.03.29", "nav": 24312.49, "price": null, "volume": null}, {"date": "2026.03.30", "nav": 23441.05, "price": 23370, "volume": 1809092}, {"date": "2026.03.31", "nav": 22321.84, "price": 22375, "volume": 1252934}, {"date": "2026.04.01", "nav": 24372.86, "price": 24380, "volume": 1941576}, {"date": "2026.04.02", "nav": 23280.03, "price": 23290, "volume": 1298162}, {"date": "2026.04.03", "nav": 23941.19, "price": 23960, "volume": 425550}, {"date": "2026.04.04", "nav": 23941.19, "price": null, "volume": null}, {"date": "2026.04.05", "nav": 23941.19, "price": null, "volume": null}, {"date": "2026.04.06", "nav": 24240.72, "price": 24190, "volume": 837059}, {"date": "2026.04.07", "nav": 24558.74, "price": 24500, "volume": 782753}, {"date": "2026.04.08", "nav": 26416.89, "price": 26455, "volume": 4192999}, {"date": "2026.04.09", "nav": 25860.98, "price": 26000, "volume": 980662}, {"date": "2026.04.10", "nav": 26326.24, "price": 26265, "volume": 736259}, {"date": "2026.04.11", "nav": 26326.24, "price": null, "volume": null}, {"date": "2026.04.12", "nav": 26326.23, "price": null, "volume": null}, {"date": "2026.04.13", "nav": 26227.39, "price": 26275, "volume": 1265947}, {"date": "2026.04.14", "nav": 27076.6, "price": 27050, "volume": 4414735}, {"date": "2026.04.15", "nav": 27548.82, "price": 27585, "volume": 3565778}, {"date": "2026.04.16", "nav": 28109.68, "price": 28050, "volume": 1242538}, {"date": "2026.04.17", "nav": 27814.23, "price": 27915, "volume": 1835735}, {"date": "2026.04.18", "nav": 27814.26, "price": null, "volume": null}, {"date": "2026.04.19", "nav": 27814.29, "price": null, "volume": null}, {"date": "2026.04.20", "nav": 28020.13, "price": 28095, "volume": 2273968}, {"date": "2026.04.21", "nav": 28679.09, "price": 28700, "volume": 3181433}, {"date": "2026.04.22", "nav": 28714.43, "price": 28730, "volume": 2357659}, {"date": "2026.04.23", "nav": 28950.12, "price": 28985, "volume": 6498702}, {"date": "2026.04.24", "nav": 28878.74, "price": 28925, "volume": 1559062}, {"date": "2026.04.25", "nav": 28878.78, "price": null, "volume": null}, {"date": "2026.04.26", "nav": 28878.82, "price": null, "volume": null}, {"date": "2026.04.27", "nav": 29705.63, "price": 29635, "volume": 4198959}, {"date": "2026.04.28", "nav": 29800.22, "price": 29840, "volume": 3029959}, {"date": "2026.04.29", "nav": 29912.34, "price": 29920, "volume": 1576647}, {"date": "2026.04.30", "nav": 29544.36, "price": 29645, "volume": 2656736}, {"date": "2026.05.01", "nav": 29544.42, "price": null, "volume": null}, {"date": "2026.05.02", "nav": 29544.48, "price": null, "volume": null}, {"date": "2026.05.03", "nav": 29544.53, "price": null, "volume": null}, {"date": "2026.05.04", "nav": 31367.01, "price": 31350, "volume": 5516448}, {"date": "2026.05.05", "nav": 31367.06, "price": null, "volume": null}, {"date": "2026.05.06", "nav": 33588.28, "price": 33615, "volume": 6803624}, {"date": "2026.05.07", "nav": 34144.75, "price": 34210, "volume": 3660804}, {"date": "2026.05.08", "nav": 34445.1, "price": 34505, "volume": 2885561}, {"date": "2026.05.09", "nav": 34445.22, "price": null, "volume": null}, {"date": "2026.05.10", "nav": 34445.33, "price": null, "volume": null}, {"date": "2026.05.11", "nav": 36559.93, "price": 36655, "volume": 5754619}, {"date": "2026.05.12", "nav": 35753.55, "price": 35880, "volume": 5322416}, {"date": "2026.05.13", "nav": 37065.66, "price": 37115, "volume": 3069784}, {"date": "2026.05.14", "nav": 37648.09, "price": 37500, "volume": 3879719}, {"date": "2026.05.15", "nav": 35315.66, "price": 35445, "volume": 4251704}, {"date": "2026.05.16", "nav": 35315.69, "price": null, "volume": null}, {"date": "2026.05.17", "nav": 35315.72, "price": null, "volume": null}, {"date": "2026.05.18", "nav": 35332.81, "price": 35420, "volume": 3013686}, {"date": "2026.05.19", "nav": 34226.19, "price": 34110, "volume": 2745036}, {"date": "2026.05.20", "nav": 33961.52, "price": 34015, "volume": 2625899}, {"date": "2026.05.21", "nav": 36795.9, "price": 36810, "volume": 2477030}, {"date": "2026.05.22", "nav": 36826.98, "price": 36785, "volume": 1168692}, {"date": "2026.05.23", "nav": 36827.01, "price": null, "volume": null}, {"date": "2026.05.24", "nav": 36827.03, "price": null, "volume": null}, {"date": "2026.05.25", "nav": 36827.05, "price": null, "volume": null}, {"date": "2026.05.26", "nav": 37771.51, "price": 37800, "volume": 2430612}, {"date": "2026.05.27", "nav": 38658.22, "price": 38620, "volume": 6857991}, {"date": "2026.05.28", "nav": 38361.47, "price": 38235, "volume": 1455162}, {"date": "2026.05.29", "nav": 39476.73, "price": 39335, "volume": 1421189}, {"date": "2026.05.30", "nav": 39476.77, "price": null, "volume": null}, {"date": "2026.05.31", "nav": 39476.81, "price": null, "volume": null}, {"date": "2026.06.01", "nav": 40843.52, "price": 40990, "volume": 4033978}, {"date": "2026.06.02", "nav": 40867.61, "price": 40955, "volume": 2936232}, {"date": "2026.06.03", "nav": 40867.66, "price": null, "volume": null}, {"date": "2026.06.04", "nav": 40327.47, "price": 40440, "volume": 1678416}, {"date": "2026.06.05", "nav": 38214.71, "price": 38255, "volume": 2812538}, {"date": "2026.06.06", "nav": 38214.74, "price": null, "volume": null}, {"date": "2026.06.07", "nav": 38214.77, "price": null, "volume": null}, {"date": "2026.06.08", "nav": 35024.23, "price": 35020, "volume": 1701751}, {"date": "2026.06.09", "nav": 37994.75, "price": 38010, "volume": 1363219}, {"date": "2026.06.10", "nav": 36313.84, "price": 36375, "volume": 1066479}, {"date": "2026.06.11", "nav": 36490.23, "price": 36450, "volume": 1323645}, {"date": "2026.06.12", "nav": 38229.77, "price": 38290, "volume": 2455162}, {"date": "2026.06.13", "nav": 38229.8, "price": null, "volume": null}, {"date": "2026.06.14", "nav": 38229.83, "price": null, "volume": null}, {"date": "2026.06.15", "nav": 40034.93, "price": 40010, "volume": 1073742}, {"date": "2026.06.16", "nav": 40908.16, "price": 40840, "volume": 1205362}, {"date": "2026.06.17", "nav": 41354.58, "price": 41235, "volume": 1022142}, {"date": "2026.06.18", "nav": 41983.29, "price": 41890, "volume": 2227729}, {"date": "2026.06.19", "nav": 41952.91, "price": 41945, "volume": 3226625}, {"date": "2026.06.20", "nav": 41952.95, "price": null, "volume": null}, {"date": "2026.06.21", "nav": 41953.0, "price": null, "volume": null}, {"date": "2026.06.22", "nav": 42431.92, "price": 42370, "volume": 697965}, {"date": "2026.06.23", "nav": 38634.95, "price": 38830, "volume": 1693461}, {"date": "2026.06.24", "nav": 39294.08, "price": 39320, "volume": 1967103}];
+  BM_RAW   = [{"date": "20241119", "close": 2471.949951171875}, {"date": "20241120", "close": 2482.2900390625}, {"date": "20241121", "close": 2480.6298828125}, {"date": "20241122", "close": 2501.239990234375}, {"date": "20241125", "close": 2534.340087890625}, {"date": "20241126", "close": 2520.360107421875}, {"date": "20241127", "close": 2503.06005859375}, {"date": "20241128", "close": 2504.669921875}, {"date": "20241129", "close": 2455.909912109375}, {"date": "20241202", "close": 2454.47998046875}, {"date": "20241203", "close": 2500.10009765625}, {"date": "20241204", "close": 2464.0}, {"date": "20241205", "close": 2441.85009765625}, {"date": "20241206", "close": 2428.159912109375}, {"date": "20241209", "close": 2360.580078125}, {"date": "20241210", "close": 2417.840087890625}, {"date": "20241211", "close": 2442.510009765625}, {"date": "20241212", "close": 2482.1201171875}, {"date": "20241213", "close": 2494.4599609375}, {"date": "20241216", "close": 2488.969970703125}, {"date": "20241217", "close": 2456.81005859375}, {"date": "20241218", "close": 2484.429931640625}, {"date": "20241219", "close": 2435.929931640625}, {"date": "20241220", "close": 2404.14990234375}, {"date": "20241223", "close": 2442.010009765625}, {"date": "20241224", "close": 2440.52001953125}, {"date": "20241226", "close": 2429.669921875}, {"date": "20241227", "close": 2404.77001953125}, {"date": "20241230", "close": 2399.489990234375}, {"date": "20250102", "close": 2398.93994140625}, {"date": "20250103", "close": 2441.919921875}, {"date": "20250106", "close": 2488.639892578125}, {"date": "20250107", "close": 2492.10009765625}, {"date": "20250108", "close": 2521.050048828125}, {"date": "20250109", "close": 2521.89990234375}, {"date": "20250110", "close": 2515.780029296875}, {"date": "20250113", "close": 2489.56005859375}, {"date": "20250114", "close": 2497.39990234375}, {"date": "20250115", "close": 2496.81005859375}, {"date": "20250116", "close": 2527.489990234375}, {"date": "20250117", "close": 2523.550048828125}, {"date": "20250120", "close": 2520.050048828125}, {"date": "20250121", "close": 2518.030029296875}, {"date": "20250122", "close": 2547.06005859375}, {"date": "20250123", "close": 2515.489990234375}, {"date": "20250124", "close": 2536.800048828125}, {"date": "20250131", "close": 2517.3701171875}, {"date": "20250203", "close": 2453.949951171875}, {"date": "20250204", "close": 2481.68994140625}, {"date": "20250205", "close": 2509.27001953125}, {"date": "20250206", "close": 2536.75}, {"date": "20250207", "close": 2521.919921875}, {"date": "20250210", "close": 2521.27001953125}, {"date": "20250211", "close": 2539.050048828125}, {"date": "20250212", "close": 2548.389892578125}, {"date": "20250213", "close": 2583.169921875}, {"date": "20250214", "close": 2591.050048828125}, {"date": "20250217", "close": 2610.419921875}, {"date": "20250218", "close": 2626.81005859375}, {"date": "20250219", "close": 2671.52001953125}, {"date": "20250220", "close": 2654.06005859375}, {"date": "20250221", "close": 2654.580078125}, {"date": "20250224", "close": 2645.27001953125}, {"date": "20250225", "close": 2630.2900390625}, {"date": "20250226", "close": 2641.090087890625}, {"date": "20250227", "close": 2621.75}, {"date": "20250228", "close": 2532.780029296875}, {"date": "20250304", "close": 2528.919921875}, {"date": "20250305", "close": 2558.1298828125}, {"date": "20250306", "close": 2576.159912109375}, {"date": "20250307", "close": 2563.47998046875}, {"date": "20250310", "close": 2570.389892578125}, {"date": "20250311", "close": 2537.60009765625}, {"date": "20250312", "close": 2574.820068359375}, {"date": "20250313", "close": 2573.639892578125}, {"date": "20250314", "close": 2566.360107421875}, {"date": "20250317", "close": 2610.68994140625}, {"date": "20250318", "close": 2612.340087890625}, {"date": "20250319", "close": 2628.6201171875}, {"date": "20250320", "close": 2637.10009765625}, {"date": "20250321", "close": 2643.1298828125}, {"date": "20250324", "close": 2632.070068359375}, {"date": "20250325", "close": 2615.81005859375}, {"date": "20250326", "close": 2643.93994140625}, {"date": "20250327", "close": 2607.14990234375}, {"date": "20250328", "close": 2557.97998046875}, {"date": "20250331", "close": 2481.1201171875}, {"date": "20250401", "close": 2521.389892578125}, {"date": "20250402", "close": 2505.860107421875}, {"date": "20250403", "close": 2486.699951171875}, {"date": "20250404", "close": 2465.419921875}, {"date": "20250407", "close": 2328.199951171875}, {"date": "20250408", "close": 2334.22998046875}, {"date": "20250409", "close": 2293.699951171875}, {"date": "20250410", "close": 2445.06005859375}, {"date": "20250411", "close": 2432.719970703125}, {"date": "20250414", "close": 2455.889892578125}, {"date": "20250415", "close": 2477.409912109375}, {"date": "20250416", "close": 2447.429931640625}, {"date": "20250417", "close": 2470.409912109375}, {"date": "20250418", "close": 2483.419921875}, {"date": "20250421", "close": 2488.419921875}, {"date": "20250422", "close": 2486.639892578125}, {"date": "20250423", "close": 2525.56005859375}, {"date": "20250424", "close": 2522.330078125}, {"date": "20250425", "close": 2546.300048828125}, {"date": "20250428", "close": 2548.860107421875}, {"date": "20250429", "close": 2565.419921875}, {"date": "20250430", "close": 2556.610107421875}, {"date": "20250502", "close": 2559.7900390625}, {"date": "20250507", "close": 2573.800048828125}, {"date": "20250508", "close": 2579.47998046875}, {"date": "20250509", "close": 2577.27001953125}, {"date": "20250512", "close": 2607.330078125}, {"date": "20250513", "close": 2608.419921875}, {"date": "20250514", "close": 2640.570068359375}, {"date": "20250515", "close": 2621.360107421875}, {"date": "20250516", "close": 2626.8701171875}, {"date": "20250519", "close": 2603.419921875}, {"date": "20250520", "close": 2601.800048828125}, {"date": "20250521", "close": 2625.580078125}, {"date": "20250522", "close": 2593.669921875}, {"date": "20250523", "close": 2592.090087890625}, {"date": "20250526", "close": 2644.39990234375}, {"date": "20250527", "close": 2637.219970703125}, {"date": "20250528", "close": 2670.14990234375}, {"date": "20250529", "close": 2720.639892578125}, {"date": "20250530", "close": 2697.669921875}, {"date": "20250602", "close": 2698.969970703125}, {"date": "20250604", "close": 2770.840087890625}, {"date": "20250605", "close": 2812.050048828125}, {"date": "20250609", "close": 2855.77001953125}, {"date": "20250610", "close": 2871.85009765625}, {"date": "20250611", "close": 2907.0400390625}, {"date": "20250612", "close": 2920.030029296875}, {"date": "20250613", "close": 2894.6201171875}, {"date": "20250616", "close": 2946.659912109375}, {"date": "20250617", "close": 2950.300048828125}, {"date": "20250618", "close": 2972.18994140625}, {"date": "20250619", "close": 2977.739990234375}, {"date": "20250620", "close": 3021.840087890625}, {"date": "20250623", "close": 3014.469970703125}, {"date": "20250624", "close": 3103.639892578125}, {"date": "20250625", "close": 3108.25}, {"date": "20250626", "close": 3079.56005859375}, {"date": "20250627", "close": 3055.93994140625}, {"date": "20250630", "close": 3071.699951171875}, {"date": "20250701", "close": 3089.64990234375}, {"date": "20250702", "close": 3075.06005859375}, {"date": "20250703", "close": 3116.27001953125}, {"date": "20250704", "close": 3054.280029296875}, {"date": "20250707", "close": 3059.469970703125}, {"date": "20250708", "close": 3114.949951171875}, {"date": "20250709", "close": 3133.739990234375}, {"date": "20250710", "close": 3183.22998046875}, {"date": "20250711", "close": 3175.77001953125}, {"date": "20250714", "close": 3202.030029296875}, {"date": "20250715", "close": 3215.280029296875}, {"date": "20250716", "close": 3186.3798828125}, {"date": "20250717", "close": 3192.2900390625}, {"date": "20250718", "close": 3188.070068359375}, {"date": "20250721", "close": 3210.81005859375}, {"date": "20250722", "close": 3169.93994140625}, {"date": "20250723", "close": 3183.77001953125}, {"date": "20250724", "close": 3190.449951171875}, {"date": "20250725", "close": 3196.050048828125}, {"date": "20250728", "close": 3209.52001953125}, {"date": "20250729", "close": 3230.570068359375}, {"date": "20250730", "close": 3254.469970703125}, {"date": "20250731", "close": 3245.43994140625}, {"date": "20250801", "close": 3119.409912109375}, {"date": "20250804", "close": 3147.75}, {"date": "20250805", "close": 3198.0}, {"date": "20250806", "close": 3198.139892578125}, {"date": "20250807", "close": 3227.679931640625}, {"date": "20250808", "close": 3210.010009765625}, {"date": "20250811", "close": 3206.77001953125}, {"date": "20250812", "close": 3189.909912109375}, {"date": "20250813", "close": 3224.3701171875}, {"date": "20250814", "close": 3225.659912109375}, {"date": "20250818", "close": 3177.280029296875}, {"date": "20250819", "close": 3151.56005859375}, {"date": "20250820", "close": 3130.090087890625}, {"date": "20250821", "close": 3141.739990234375}, {"date": "20250822", "close": 3168.72998046875}, {"date": "20250825", "close": 3209.860107421875}, {"date": "20250826", "close": 3179.360107421875}, {"date": "20250827", "close": 3187.159912109375}, {"date": "20250828", "close": 3196.320068359375}, {"date": "20250829", "close": 3186.010009765625}, {"date": "20250901", "close": 3142.929931640625}, {"date": "20250902", "close": 3172.35009765625}, {"date": "20250903", "close": 3184.419921875}, {"date": "20250904", "close": 3200.830078125}, {"date": "20250905", "close": 3205.1201171875}, {"date": "20250908", "close": 3219.590087890625}, {"date": "20250909", "close": 3260.050048828125}, {"date": "20250910", "close": 3314.530029296875}, {"date": "20250911", "close": 3344.199951171875}, {"date": "20250912", "close": 3395.5400390625}, {"date": "20250915", "close": 3407.31005859375}, {"date": "20250916", "close": 3449.6201171875}, {"date": "20250917", "close": 3413.39990234375}, {"date": "20250918", "close": 3461.300048828125}, {"date": "20250919", "close": 3445.239990234375}, {"date": "20250922", "close": 3468.64990234375}, {"date": "20250923", "close": 3486.18994140625}, {"date": "20250924", "close": 3472.139892578125}, {"date": "20250925", "close": 3471.110107421875}, {"date": "20250926", "close": 3386.050048828125}, {"date": "20250929", "close": 3431.2099609375}, {"date": "20250930", "close": 3424.60009765625}, {"date": "20251001", "close": 3455.830078125}, {"date": "20251002", "close": 3549.2099609375}, {"date": "20251010", "close": 3610.60009765625}, {"date": "20251013", "close": 3584.550048828125}, {"date": "20251014", "close": 3561.81005859375}, {"date": "20251015", "close": 3657.280029296875}, {"date": "20251016", "close": 3748.3701171875}, {"date": "20251017", "close": 3748.889892578125}, {"date": "20251020", "close": 3814.68994140625}, {"date": "20251021", "close": 3823.840087890625}, {"date": "20251022", "close": 3883.679931640625}, {"date": "20251023", "close": 3845.56005859375}, {"date": "20251024", "close": 3941.590087890625}, {"date": "20251027", "close": 4042.830078125}, {"date": "20251028", "close": 4010.409912109375}, {"date": "20251029", "close": 4081.14990234375}, {"date": "20251030", "close": 4086.889892578125}, {"date": "20251031", "close": 4107.5}, {"date": "20251103", "close": 4221.8701171875}, {"date": "20251104", "close": 4121.740234375}, {"date": "20251105", "close": 4004.419921875}, {"date": "20251106", "close": 4026.449951171875}, {"date": "20251107", "close": 3953.760009765625}, {"date": "20251110", "close": 4073.239990234375}, {"date": "20251111", "close": 4106.39013671875}, {"date": "20251112", "close": 4150.39013671875}, {"date": "20251113", "close": 4170.6298828125}, {"date": "20251114", "close": 4011.570068359375}, {"date": "20251117", "close": 4089.25}, {"date": "20251118", "close": 3953.6201171875}, {"date": "20251119", "close": 3929.510009765625}, {"date": "20251120", "close": 4004.85009765625}, {"date": "20251121", "close": 3853.260009765625}, {"date": "20251124", "close": 3846.06005859375}, {"date": "20251125", "close": 3857.780029296875}, {"date": "20251126", "close": 3960.8701171875}, {"date": "20251127", "close": 3986.909912109375}, {"date": "20251128", "close": 3926.590087890625}, {"date": "20251201", "close": 3920.3701171875}, {"date": "20251202", "close": 3994.929931640625}, {"date": "20251203", "close": 4036.300048828125}, {"date": "20251204", "close": 4028.510009765625}, {"date": "20251205", "close": 4100.0498046875}, {"date": "20251208", "close": 4154.85009765625}, {"date": "20251209", "close": 4143.5498046875}, {"date": "20251210", "close": 4135.0}, {"date": "20251211", "close": 4110.6201171875}, {"date": "20251212", "close": 4167.16015625}, {"date": "20251215", "close": 4090.590087890625}, {"date": "20251216", "close": 3999.1298828125}, {"date": "20251217", "close": 4056.409912109375}, {"date": "20251218", "close": 3994.510009765625}, {"date": "20251219", "close": 4020.550048828125}, {"date": "20251222", "close": 4105.93017578125}, {"date": "20251223", "close": 4117.31982421875}, {"date": "20251224", "close": 4108.6201171875}, {"date": "20251226", "close": 4129.68017578125}, {"date": "20251229", "close": 4220.56005859375}, {"date": "20251230", "close": 4214.169921875}, {"date": "20260102", "close": 4309.6298828125}, {"date": "20260105", "close": 4457.52001953125}, {"date": "20260106", "close": 4525.47998046875}, {"date": "20260107", "close": 4551.06005859375}, {"date": "20260108", "close": 4552.3701171875}, {"date": "20260109", "close": 4586.31982421875}, {"date": "20260112", "close": 4624.7900390625}, {"date": "20260113", "close": 4692.64013671875}, {"date": "20260114", "close": 4723.10009765625}, {"date": "20260115", "close": 4797.5498046875}, {"date": "20260116", "close": 4840.740234375}, {"date": "20260119", "close": 4904.66015625}, {"date": "20260120", "close": 4885.75}, {"date": "20260121", "close": 4909.93017578125}, {"date": "20260122", "close": 4952.52978515625}, {"date": "20260123", "close": 4990.06982421875}, {"date": "20260126", "close": 4949.58984375}, {"date": "20260127", "close": 5084.85009765625}, {"date": "20260128", "close": 5170.81005859375}, {"date": "20260129", "close": 5221.25}, {"date": "20260130", "close": 5224.35986328125}, {"date": "20260202", "close": 4949.669921875}, {"date": "20260203", "close": 5288.080078125}, {"date": "20260204", "close": 5371.10009765625}, {"date": "20260205", "close": 5163.56982421875}, {"date": "20260206", "close": 5089.14013671875}, {"date": "20260209", "close": 5298.0400390625}, {"date": "20260210", "close": 5301.68994140625}, {"date": "20260211", "close": 5354.490234375}, {"date": "20260212", "close": 5522.27001953125}, {"date": "20260213", "close": 5507.009765625}, {"date": "20260219", "close": 5677.25}, {"date": "20260220", "close": 5808.52978515625}, {"date": "20260223", "close": 5846.08984375}, {"date": "20260224", "close": 5969.64013671875}, {"date": "20260225", "close": 6083.85986328125}, {"date": "20260226", "close": 6307.27001953125}, {"date": "20260227", "close": 6244.1298828125}, {"date": "20260303", "close": 5791.91015625}, {"date": "20260304", "close": 5093.5400390625}, {"date": "20260305", "close": 5583.89990234375}, {"date": "20260306", "close": 5584.8701171875}, {"date": "20260309", "close": 5251.8701171875}, {"date": "20260310", "close": 5532.58984375}, {"date": "20260311", "close": 5609.9501953125}, {"date": "20260312", "close": 5583.25}, {"date": "20260313", "close": 5487.240234375}, {"date": "20260316", "close": 5549.85009765625}, {"date": "20260317", "close": 5640.47998046875}, {"date": "20260318", "close": 5925.02978515625}, {"date": "20260319", "close": 5763.22021484375}, {"date": "20260320", "close": 5781.2001953125}, {"date": "20260323", "close": 5405.75}, {"date": "20260324", "close": 5553.919921875}, {"date": "20260325", "close": 5642.2099609375}, {"date": "20260326", "close": 5460.4599609375}, {"date": "20260327", "close": 5438.8701171875}, {"date": "20260330", "close": 5277.2998046875}, {"date": "20260331", "close": 5052.4599609375}, {"date": "20260401", "close": 5478.7001953125}, {"date": "20260402", "close": 5234.0498046875}, {"date": "20260403", "close": 5377.2998046875}, {"date": "20260406", "close": 5450.330078125}, {"date": "20260407", "close": 5494.77978515625}, {"date": "20260408", "close": 5872.33984375}, {"date": "20260409", "close": 5778.009765625}, {"date": "20260410", "close": 5858.8701171875}, {"date": "20260413", "close": 5808.6201171875}, {"date": "20260414", "close": 5967.75}, {"date": "20260415", "close": 6091.39013671875}, {"date": "20260416", "close": 6226.0498046875}, {"date": "20260417", "close": 6191.919921875}, {"date": "20260420", "close": 6219.08984375}, {"date": "20260421", "close": 6388.47021484375}, {"date": "20260422", "close": 6417.93017578125}, {"date": "20260423", "close": 6475.81005859375}, {"date": "20260424", "close": 6475.6298828125}, {"date": "20260427", "close": 6615.02978515625}, {"date": "20260428", "close": 6641.02001953125}, {"date": "20260429", "close": 6690.89990234375}, {"date": "20260430", "close": 6598.8701171875}, {"date": "20260504", "close": 6936.990234375}, {"date": "20260506", "close": 7384.56005859375}, {"date": "20260507", "close": 7490.0498046875}, {"date": "20260508", "close": 7498.0}, {"date": "20260511", "close": 7822.240234375}, {"date": "20260512", "close": 7643.14990234375}, {"date": "20260513", "close": 7844.009765625}, {"date": "20260514", "close": 7981.41015625}, {"date": "20260515", "close": 7493.18017578125}, {"date": "20260518", "close": 7516.0400390625}, {"date": "20260519", "close": 7271.66015625}, {"date": "20260520", "close": 7208.9501953125}, {"date": "20260521", "close": 7815.58984375}, {"date": "20260522", "close": 7847.7099609375}, {"date": "20260526", "close": 8047.509765625}, {"date": "20260527", "close": 8228.7001953125}, {"date": "20260528", "close": 8185.2900390625}, {"date": "20260529", "close": 8476.150390625}, {"date": "20260601", "close": 8788.3798828125}, {"date": "20260602", "close": 8801.490234375}, {"date": "20260604", "close": 8639.41015625}, {"date": "20260605", "close": 8160.58984375}, {"date": "20260608", "close": 7484.41015625}, {"date": "20260609", "close": 8096.93017578125}, {"date": "20260610", "close": 7730.81982421875}, {"date": "20260611", "close": 7763.9501953125}, {"date": "20260612", "close": 8123.6201171875}, {"date": "20260615", "close": 8545.98046875}, {"date": "20260616", "close": 8726.599609375}, {"date": "20260617", "close": 8864.240234375}, {"date": "20260618", "close": 9063.83984375}, {"date": "20260619", "close": 9052.419921875}, {"date": "20260622", "close": 9114.5498046875}, {"date": "20260623", "close": 8203.83984375}, {"date": "20260624", "close": 8471.01953125}, {"date": "20260625", "close": 8930.2998046875}];
+  BM_NAME  = "KOSPI";
+  S_LABELS = ["반도체와반도체장비", "소프트웨어와서비스", "자동차와부품", "금융", "자본재"];
+  S_WEIGHTS= [41.87, 11.45, 9.31, 7.86, 2.45];
+  S_COLORS = ["#0047B3", "#F5A800", "#4A9CF0", "#28A745", "#E03232"];
+} catch(e) {
+  NAV_RAW=[]; BM_RAW=[]; BM_NAME="KOSPI"; S_LABELS=[]; S_WEIGHTS=[]; S_COLORS=[];
+}
+
+/* ── 룩업맵 ── */
+var navMap = {}, bmMap = {};
+NAV_RAW.forEach(function(d){ navMap[d.date] = d.nav; });
+BM_RAW.forEach(function(d){  bmMap[d.date]  = d.close; });
+
+/* ── 거래일 전체 (price != null) ── */
+var tradeDates = NAV_RAW
+  .filter(function(d){ return d.price !== null && d.price !== undefined; })
+  .map(function(d){ return d.date; });
+
+/* ── BM 날짜 정렬 (최근접 매핑용) ── */
+var bmSortedDates = Object.keys(bmMap).sort();
+function nearestBm(d) {
+  /* d와 같거나 직전의 BM 날짜를 찾아 값 반환 */
+  if (bmMap[d] != null) return bmMap[d];
+  var lo = 0, hi = bmSortedDates.length - 1, best = null;
+  while (lo <= hi) {
+    var mid = (lo + hi) >> 1;
+    if (bmSortedDates[mid] <= d) { best = bmSortedDates[mid]; lo = mid + 1; }
+    else { hi = mid - 1; }
+  }
+  return best ? bmMap[best] : null;
+}
+
+/* ── 차트용: NAV 거래일 기준, BM은 최근접 날짜로 채움 ── */
+var hasBmData = BM_RAW.length > 0;
+var chartDates = tradeDates;
+
+function r2(n){ return Math.round(n*100)/100; }
+
+function filterDates(months) {
+  /* chartDates(공통 날짜) 기준으로 기간 필터 */
+  if (!months || !chartDates.length) return chartDates;
+  var cut = new Date();
+  cut.setMonth(cut.getMonth() - months);
+  var filtered = chartDates.filter(function(d){
+    return new Date(d.replace(/\./g,'-')) >= cut;
+  });
+  return filtered.length > 1 ? filtered : chartDates;
+}
+
+function toPct(dates, map) {
+  var vals = dates.map(function(d){ return (map[d] !== undefined) ? map[d] : null; });
+  var base = null;
+  for(var i=0;i<vals.length;i++){ if(vals[i]!==null){ base=vals[i]; break; } }
+  if(!base) return vals.map(function(){ return null; });
+  return vals.map(function(v){ return v!==null ? r2((v/base-1)*100) : null; });
+}
+
+var navChart = null;
+
+function setP(period, btn) {
+  document.querySelectorAll('.ctab').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  if(!navChart) return;
+
+  var monthMap = {'1m':1,'3m':3,'6m':6,'1y':12};
+  var months = monthMap[period] || null;
+  var dates  = filterDates(months);
+
+  /* ── BM 정렬 수정: NAV·BM 첫 공통일을 기준점으로 ── */
+  var navBase = null, bmBase = null, commonDate = null;
+  for (var i = 0; i < dates.length; i++) {
+    var d = dates[i];
+    var bv = nearestBm(d);
+    if (navMap[d] != null) {
+      if (!navBase) { navBase = navMap[d]; }
+      if (!bmBase && bv != null) { bmBase = bv; commonDate = d; }
+      if (navBase && bmBase) break;
+    }
+  }
+
+  var navPct = navBase ? dates.map(function(d){
+    return navMap[d] != null ? r2((navMap[d]/navBase-1)*100) : null;
+  }) : [];
+  var bmPct = (hasBmData && bmBase) ? dates.map(function(d){
+    var bv = nearestBm(d);
+    return bv != null ? r2((bv/bmBase-1)*100) : null;
+  }) : dates.map(function(){ return null; });
+
+  /* 범례에 기준일 표시 */
+  var note = document.getElementById('chartBaseNote');
+  if (note && commonDate) {
+    note.textContent = '※ ' + commonDate + ' 기준 상대수익률(%) · 전일 종가';
+  }
+
+  navChart.data.labels            = dates;
+  navChart.data.datasets[0].data  = navPct;
+  navChart.data.datasets[1].data  = bmPct;
+  navChart.update('none');  // 애니메이션 없이 즉시 전환
+}
+
+/* ── 초기화 (Chart.js 로드 후 실행) ── */
+function initCharts() {
+  /* 1. NAV 라인차트 */
+  var navEl = document.getElementById('navChart');
+  if (navEl && tradeDates.length > 0) {
+    var ctx  = navEl.getContext('2d');
+    /* 음영(fill) 없는 클린 라인 차트 */
+
+  /* 초기 차트 데이터: chartDates(공통 날짜) 기준 */
+  var initNavBase = chartDates.length ? navMap[chartDates[0]] : null;
+  var initBmBase  = chartDates.length ? bmMap[chartDates[0]]  : null;
+  var initNavPct = initNavBase ? chartDates.map(function(d){ return navMap[d]!=null?r2((navMap[d]/initNavBase-1)*100):null; }) : [];
+  var initBmPct  = initBmBase  ? chartDates.map(function(d){ return bmMap[d] !=null?r2((bmMap[d]/initBmBase-1)*100):null;  }) : chartDates.map(function(){return null;});
+
+    navChart = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: chartDates,
+        datasets:[
+          { label:'NAV', data: initNavPct,
+            borderColor:'#0047B3', borderWidth:2.2,
+            backgroundColor:'transparent', fill:false, tension:0.3,
+            pointRadius:0, pointHoverRadius:4,
+            spanGaps: false },
+          { label: BM_NAME, data: initBmPct,
+            borderColor:'#B0B8CC', borderWidth:1.5,
+            backgroundColor:'transparent', fill:false, tension:0.3,
+            pointRadius:0, pointHoverRadius:4,
+            borderDash:[5,3], spanGaps: false }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{
+            display:true, position:'top', align:'end',
+            labels:{font:{size:9}, usePointStyle:true, padding:10,
+                    boxWidth:12, boxHeight:2}
+          },
+          tooltip:{
+            backgroundColor:'#002B6E', padding:10,
+            callbacks:{
+              title: function(items){ return items[0].label + ' 종가'; },
+              label: function(item){
+                var date = item.label;
+                var isNav = item.datasetIndex === 0;
+                var map   = isNav ? navMap : bmMap;
+                var label = item.dataset.label;
+                var val   = map[date];
+                if(val === undefined || val === null) return '';
+                // 전일 대비 등락률 계산
+                var idx = chartDates.indexOf(date);
+                var prevDate = idx > 0 ? chartDates[idx-1] : null;
+                var prevVal  = prevDate ? map[prevDate] : null;
+                var chgStr = '';
+                if(prevVal && prevVal > 0){
+                  var chg = (val / prevVal - 1) * 100;
+                  chgStr = ' (' + (chg>=0?'+':'') + chg.toFixed(2) + '%)';
+                }
+                if(isNav){
+                  return ' ' + label + ': ' + val.toLocaleString() + '원' + chgStr;
+                } else {
+                  return ' ' + label + ': ' + val.toLocaleString() + chgStr;
+                }
+              }
+            }
+          }
+        },
+        scales:{
+          x:{grid:{color:'#F0F2F7'},
+             ticks:{font:{size:8.5},color:'#8896B3',maxTicksLimit:7}},
+          y:{grid:{color:'#F0F2F7'},
+             ticks:{font:{size:8.5},color:'#8896B3',
+               callback:function(v){ return (v>=0?'+':'')+v+'%'; }}}
+        }
+      }
+    });
+
+    /* 기본 탭: 항상 '전체' — setP 명시 호출로 chartBaseNote까지 정확히 초기화 */
+    var defBtn = null;
+    document.querySelectorAll('.ctab').forEach(function(b){
+      if(b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'all'") >= 0){
+        defBtn = b;
+      }
+    });
+    setP('all', defBtn);
+  } else if(navEl) {
+    navEl.parentElement.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:182px;color:var(--gray-text);font-size:11px;">차트 데이터 없음</div>';
+  }
+
+  /* 2. 업종 도넛 */
+  var donutEl = document.getElementById('donutChart');
+  if (donutEl && S_LABELS && S_LABELS.length > 0) {
+    new Chart(donutEl.getContext('2d'), {
+      type:'doughnut',
+      data:{
+        labels: S_LABELS,
+        datasets:[{ data: S_WEIGHTS,
+                    backgroundColor: S_COLORS,
+                    borderWidth:2, borderColor:'#fff', hoverOffset:5 }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false, cutout:'63%',
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:'#002B6E',
+            callbacks:{
+              label: function(c){ return ' '+c.label+': '+c.parsed.toFixed(1)+'%'; }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+/* Chart.js가 로드됐는지 확인 후 실행 */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCharts);
+} else {
+  initCharts();
+}
+</script>
+</body>
+</html>
