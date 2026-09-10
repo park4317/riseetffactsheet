@@ -28,6 +28,11 @@ jobs:
           pip install requests beautifulsoup4 lxml jinja2 yfinance --quiet
 
       - name: Generate factsheets
+        env:
+          # 값은 저장소 Settings > Secrets and variables > Actions 에 있다.
+          # 소스에 키를 적지 않는다 (2026-09-10 자격증명 정리).
+          JKOS_DART_KEY: ${{ secrets.JKOS_DART_KEY }}
+          JKOS_KRX_KEY: ${{ secrets.JKOS_KRX_KEY }}
         run: |
           cd pipeline
           python main.py
