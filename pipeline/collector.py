@@ -9,14 +9,22 @@ from io import BytesIO
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 
-from config import RISE_BASE_URL, HEADERS, NAV_HISTORY_DAYS, DART_API_KEY, KRX_API_KEY
+from config import (RISE_BASE_URL, HEADERS, NAV_HISTORY_DAYS,
+                    DART_API_KEY_ENV, KRX_API_KEY_ENV,
+                    MissingCredential, require_api_key)
 from krx_collector import KRXCollector, get_listing_date_from_krx, get_distribution_from_krx, get_distribution_from_naver
 
 # DART 수집기 (분배금)
 try:
     from dart_collector import DARTCollector as _DARTCollector
-    _dart = _DARTCollector(DART_API_KEY)
+    _dart = _DARTCollector(require_api_key(DART_API_KEY_ENV, service="OpenDART"))
     DART_OK = True
+except MissingCredential as _e:
+    # 조용히 넘어가지 않는다. 키가 없으면 분배금 수집이 통째로 빠지는데,
+    # 그 사실이 산출물에는 드러나지 않는다 (감사 R-04).
+    print(f"[경고] {_e}")
+    DART_OK = False
+    _dart = None
 except Exception:
     DART_OK = False
     _dart = None
@@ -37,7 +45,8 @@ class RISECollector:
         self.site_id = site_id
         self.session = requests.Session()
         self.session.headers.update(HEADERS)
-        self.krx = KRXCollector(api_key=KRX_API_KEY)
+        self.krx = KRXCollector(
+            api_key=require_api_key(KRX_API_KEY_ENV, service="KRX Open API"))
 
     def get_nav_history(self, start_date=None):
         end = datetime.now().strftime("%Y-%m-%d")
@@ -433,7 +442,7 @@ class RISECollector:
         krx_listing = ""
         if ticker_6:
             try:
-                krx_listing = get_listing_date_from_krx(ticker_6, KRX_API_KEY)
+                krx_listing = get_listing_date_from_krx(ticker_6, self.krx.api_key)
                 if krx_listing:
                     print(f"  [상장일 KRX] {krx_listing}")
             except Exception as e:

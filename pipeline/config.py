@@ -1249,8 +1249,69 @@ ETF_LIST = {
 #  공통 설정
 # ─────────────────────────────────────────
 # ── 외부 API 키 ──────────────────────────────────────────────
-DART_API_KEY = "decf16283fbdba7d938678192b6c5b0b75b17e93"   # opendart.fss.or.kr
-KRX_API_KEY  = "FF1410AF7E4B44289CEDA97EC2E153E6ABAEFF99"   # openapi.krx.co.kr
+# **값을 이 파일에 적지 않는다.**
+#
+# 2026-09-10 감사에서 이 자리의 평문 키 두 개가 공개 GitHub 저장소의 커밋
+# 히스토리에 들어 있는 것이 확인됐다 (Initial setup 부터). 소스에 적는 순간
+# 되돌릴 수 없다 — 지우는 것으로는 복구되지 않고, 키를 폐기해야 한다.
+#
+# 그래서 키는 환경변수로만 받는다. 설정 위치는 둘 중 하나다.
+#   - 저장소 루트의 .env  (git 추적 금지. .gitignore 에 등록돼 있다)
+#   - 사용자 환경변수
+#
+# 이름:
+#   JKOS_DART_KEY   opendart.fss.or.kr
+#   JKOS_KRX_KEY    openapi.krx.co.kr
+#
+# 없으면 빈 문자열로 물러나지 않고 예외를 던진다. 조용한 폴백이
+# 이 회사에서 가장 비싸게 배운 결함이다 (헌장 제3조 · 감사 R-04).
+import os as _os
+
+DART_API_KEY_ENV = "JKOS_DART_KEY"
+KRX_API_KEY_ENV = "JKOS_KRX_KEY"
+
+
+class MissingCredential(RuntimeError):
+    """자격증명이 없다. 이 예외를 삼켜서 기본 동작으로 넘어가지 말 것."""
+
+
+def _load_dotenv_once() -> None:
+    """저장소 루트의 .env 를 환경변수로 올린다. 이미 있는 값은 덮어쓰지 않는다.
+
+    외부 패키지를 쓰지 않는다 — deploy.bat 의 설치 목록을 늘리지 않기 위해서다.
+    """
+    path = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), ".env")
+    if not _os.path.exists(path):
+        return
+    try:
+        # utf-8-sig: 사람이 메모장으로 편집하는 파일이다. 메모장이 붙이는 BOM 이
+        # 첫 줄 이름에 섞이면 키를 못 찾고, 그 실패가 "키가 없다"로 보인다.
+        with open(path, encoding="utf-8-sig") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k = k.strip()
+                if k and k not in _os.environ:
+                    _os.environ[k] = v.strip().strip("'\"")
+    except OSError:
+        pass
+
+
+_load_dotenv_once()
+
+
+def require_api_key(env_name: str, *, service: str) -> str:
+    """환경변수에서 키를 읽는다. 없으면 예외 — 빈 문자열을 돌려주지 않는다."""
+    value = _os.environ.get(env_name, "").strip()
+    if not value:
+        raise MissingCredential(
+            f"{service} 키가 없습니다. 환경변수 {env_name} 를 설정하세요. "
+            f"저장소 루트의 .env 에 '{env_name}=<발급받은 키>' 한 줄을 넣어도 됩니다. "
+            f"(.env 는 .gitignore 에 등록돼 있어 커밋되지 않습니다.)"
+        )
+    return value
 
 RISE_BASE_URL = "https://www.riseetf.co.kr"
 
